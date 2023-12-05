@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 
 @dataclass
-class Token:
+class WordLine:
     ID: str
     FORM: str
     LEMMA: str
@@ -17,16 +17,8 @@ class Token:
 
     def __str__(self):
         return '\t'.join([
-            self.ID,
-            self.FORM,
-            self.LEMMA,
-            self.POS,
-            self.XPOS,
-            self.FEATS,
-            self.HEAD,
-            self.DEPREL,
-            self.DEPS,
-            self.MISC
+            self.ID, self.FORM, self.LEMMA, self.POS, self.XPOS,
+            self.FEATS, self.HEAD, self.DEPREL, self.DEPS, self.MISC
             ])
 
     def feats(self) -> dict:
@@ -35,7 +27,7 @@ class Token:
 
 ROOT_LABEL = 'root'
 
-class NotValidToken(Exception):
+class NotValidWordLine(Exception):
     pass
 
 
@@ -43,12 +35,12 @@ class NotValidTree(Exception):
     pass
 
 
-def read_token(s: str) -> Token:
+def read_wordline(s: str) -> WordLine:
     fields = s.split()
     if len(fields) == 10 and fields[0][0].isdigit():
-        return Token(*fields)
+        return WordLine(*fields)
     else:
-        raise NotValidToken
+        raise NotValidWordLine
 
 
 @dataclass
@@ -70,17 +62,8 @@ class Tree:
 @dataclass
 class DepTree(Tree):
     comments: list
-
-    def add_token(self, token):
-        if token.HEAD == self.root.ID:
-            self.subtrees.append(DepTree(token, [], []))
-            return True
-        else:
-            for st in self.subtrees:
-                if st.add_token(token):
-                    break
     
-    def printp(self):
+    def __str__(self):
         lines = self.comments
         lines.extend(self.prettyprint())
         return '\n'.join(lines)
@@ -106,7 +89,7 @@ def build_deptree(ns: list) -> DepTree:
 def echo_conllu_file(file):
     for line in file:
         try:
-            t = read_token(line)
+            t = read_wordline(line)
             print(t)
         except:
             if not line.strip() or line.startswith('#'):
@@ -122,7 +105,7 @@ def conllu_file_trees(file):
         if line.startswith('#'):
             comms.append(line.strip())
         elif line.strip():
-            t = read_token(line)
+            t = read_wordline(line)
             nodes.append(t)
         else:
             dt = build_deptree(nodes)
@@ -138,11 +121,7 @@ if __name__ == '__mainz__':
 
 if __name__ == '__main__':
     for dt in conllu_file_trees(sys.stdin):
-        print(dt.printp())
+        print(dt)
         print()
 
-
-
-        
-    
 
