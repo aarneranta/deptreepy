@@ -1,0 +1,21 @@
+# sent_id = n01001013
+# text = For those who follow social media transitions on Capitol Hill, this will be a little different.
+1       For     for     ADP     IN      _       2       case    2:case  _
+2       those   those   PRON    DT      Number=Plur|PronType=Dem        17      obl     4:nsubj|17:obl:for	_
+3       who     who     PRON    WP      PronType=Rel    4       nsubj   2:ref   _
+4       follow  follow  VERB    VBP     Mood=Ind|Tense=Pres|VerbForm=Fin        2       acl:relcl       2:acl:relcl     _
+5       social  social  ADJ     JJ      Degree=Pos      6       amod    6:amod  _
+6       media   media   NOUN    NN      Number=Sing     7       compound        7:compound      _
+7       transitions     transition      NOUN    NNS     Number=Plur     4       obj     4:obj   _
+8       on      on      ADP     IN      _       10      case    10:case _
+9       Capitol capitol PROPN   NN      Number=Sing     10      compound        10:compound     _
+10      Hill    hill    PROPN   NN      Number=Sing     7       nmod    7:nmod:on       SpaceAfter=No
+11      ,       ,       PUNCT   ,       _       17      punct   17:punct        _
+12      this    this    PRON    DT      Number=Sing|PronType=Dem        17      nsubj   17:nsubj        _
+13      will    will    AUX     MD      VerbForm=Fin    17      aux     17:aux  _
+14      be      be      AUX     VB      VerbForm=Inf    17      cop     17:cop  _
+15      a       a       DET     DT      Definite=Ind|PronType=Art       16      det     16:det  _
+16      little  little  ADJ     JJ      Degree=Pos      17      obl:npmod       17:obl:npmod    _
+17      different       different       ADJ     JJ      Degree=Pos      0       root    0:root  SpaceAfter=No
+18      .       .       PUNCT   .       _       17      punct   17:punct        _
+
