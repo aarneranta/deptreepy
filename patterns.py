@@ -1,4 +1,3 @@
-import sys
 from dataclasses import dataclass
 from pyparsing import nestedExpr
 from trees import *
@@ -36,9 +35,24 @@ def match_str(patt: str, word: str) ->bool:
     return word == ''  # pattern exhausted, the word must be too
 
 
+def intpred(n, x):
+    "condition compared with a number: =8, <8, >8, !8"
+    number = int(n[1:])
+    match n[0]:
+        case '=': return x == number
+        case '!': return x != number
+        case '<': return x < number
+        case '>': return x > number
+    
+
 @dataclass
 class Pattern(Tree):
-    pass
+    def __str__(self):
+        if sts := self.subtrees:
+            return '(' + ' '.join([self.root] + [t.__str__() for t in sts]) + ')'
+        else:
+            return self.root
+        
 
 def match_wordline(patt: Pattern, word: WordLine) ->bool:
     "matching individual wordlines"
@@ -53,26 +67,52 @@ def match_wordline(patt: Pattern, word: WordLine) ->bool:
             return match_str(feats, word.FEATS)
         case Pattern('DEPREL', [rel]):
             return match_str(rel, word.DEPREL)
-        case Pattern('HEAD_BEFORE', []):
-            return int(word.HEAD) < int(word.ID) if word.ID.isdigit() else False
-        case Pattern('HEAD_AFTER', []):
-            return int(word.HEAD) > int(word.ID) if word.ID.isdigit() else False
+        case Pattern('HEAD_DISTANCE', [n]):
+            return intpred(n, int(word.HEAD) - int(word.ID)) if word.ID.isdigit() else False
         case Pattern('AND', patts):
             return all(match_wordline(p, word) for p in patts) 
         case Pattern('OR', patts):
             return any(match_wordline(p, word) for p in patts)
+        case Pattern('NOT', [patt]):
+            return not (match_wordline(patt, word))
         case _:
-            print('cannot match', str(patt))
+            return False
+
+def match_deptree(patt: Pattern, tree: DepTree) ->bool:
+    "matching entire trees - either their root wordline or the whole tree"
+    if match_wordline(patt, tree.root):
+        return True
+    else:
+        match patt:
+            case Pattern('LENGTH', [n]):
+                return intpred(n, len(tree))
+            case Pattern('DEPTH', [n]):
+                return intpred(n, tree.depth())
+            case Pattern('TREE', [pt, *patts]):
+                return (len(patts) == len(sts := tree.subtrees) 
+                         and match_deptree(pt, tree)
+                         and all(match_deptree(*pt) for pt in zip(patts, sts)))
+            case Pattern('HAS_SUBTREE', patts):
+                return any(all(match_deptree(p, st) for p in patts) for st in tree.subtrees) 
+            case Pattern('AND', patts):  # must be defined again for tree patterns
+                return all(match_deptree(p, tree) for p in patts) 
+            case Pattern('OR', patts):
+                return any(match_deptree(p, tree) for p in patts)
+            case Pattern('NOT', [patt]):
+                return not (match_deptree(patt, tree))
+            case _:
+                return False
+        
 
             
-def match_in_deptree(patt: Pattern, tree: DepTree):
-    "finding all subtrees whose head matches a given pattern"
-    if match_wordline(patt, tree.root):
-        yield tree
+def matches_in_deptree(patt: Pattern, tree: DepTree):
+    "finding all subtrees that match a pattern"
+    ts = []
+    if match_deptree(patt, tree):
+        ts.append(tree)
     for subtree in tree.subtrees:
-        print('ENTER', subtree.sentence())
-        match_in_deptree(patt, subtree)
-        
+        ts.extend(matches_in_deptree(patt, subtree))
+    return ts
 
 
 class ParseError(Exception):
@@ -114,19 +154,8 @@ def match_wordlines(patt, lines):
         
 def match_subtrees(patt, file):
     for deptree in conllu_file_trees(file):
-        for tree in match_in_deptree(patt, deptree):
+        for tree in matches_in_deptree(patt, deptree):
             print('#', tree.sentence())
             print(tree)
 
         
-if __name__ == '__main__':
-    match sys.argv[1]:
-        case 'match_wordlines':
-            pattern = parse_pattern(sys.argv[2])
-            print('#', pattern)
-            match_wordlines(pattern, sys.stdin)
-        case 'match_subtrees':
-            pattern = parse_pattern(sys.argv[2])
-            print('#', pattern)
-            match_subtrees(pattern, sys.stdin)
-

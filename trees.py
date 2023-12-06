@@ -65,7 +65,13 @@ class Tree:
     def __len__(self):
         return 1 + sum(map(len, self.subtrees))
 
+    def depth(self):
+        if self.subtrees:
+            return 1 + max(map(lambda t: t.depth(), self.subtrees))
+        else:
+            return 1
 
+    
 @dataclass
 class DepTree(Tree):
     comments: list
