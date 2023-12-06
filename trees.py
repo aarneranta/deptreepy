@@ -27,6 +27,13 @@ class WordLine:
 
 ROOT_LABEL = 'root'
 
+def ifint(id: str) ->int:
+    if id.isdigit():
+        return int(id)
+    else:
+        return int(float(id))  # for ids like '7.1'
+
+    
 class NotValidWordLine(Exception):
     pass
 
@@ -67,6 +74,17 @@ class DepTree(Tree):
         lines = self.comments
         lines.extend(self.prettyprint())
         return '\n'.join(lines)
+
+    def wordlines(self):
+        words = [self.root]
+        for tree in self.subtrees:
+            words.extend(tree.wordlines())
+        words.sort(key=lambda w: ifint(w.ID))
+        return words
+
+    def sentence(self):
+        return ' '.join([word.FORM for word in self.wordlines()])
+        
 
     
 def build_deptree(ns: list) -> DepTree:
