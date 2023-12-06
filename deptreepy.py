@@ -27,7 +27,8 @@ The following patterns match both wordlines and trees, depending on the command:
    OR  <pattern>*
    NOT <pattern>*
 
-These patterns match trees:
+When applied to trees, they match the root node of the tree.
+The following patterns match only trees:
 
    LENGTH <intpred>
    DEPTH <intpred>
@@ -36,9 +37,23 @@ These patterns match trees:
 
 The auxialiary concepts are:
 
-   <strpatt>, a string with (*) matching one or more characters (like Unix filenames)
+   <strpatt>, a string with *,?,[seq] wildcards (like Unix filenames)
    <intpred>, one of =n, <n, >n, !n, giving a comparison to number n (which can be negative)
 
+For example,
+
+   TREE (AND) (HEAD_DISTANCE >0) (HEAD_DISTANCE <0)
+
+matches trees that have both a head-final and a head-initial constituent: `(AND)` is true
+of the head, because it poses no conditions on it, the first subtree comes before the head
+(has a positive distance to it) and the second one after the head (negative distance).
+
+   FEATS *=In*
+
+matches indicative, infinitive, inessive, and other features starting with "In".
+
+Quotes are not used outside string patterns: if used, they can only match strings with
+actual quotes.
 """
 )
 

@@ -43,7 +43,7 @@ class NotValidTree(Exception):
 
 
 def read_wordline(s: str) -> WordLine:
-    fields = s.split()
+    fields = s.split('\t')
     if len(fields) == 10 and fields[0][0].isdigit():
         return WordLine(*fields)
     else:

@@ -1,38 +1,12 @@
 from dataclasses import dataclass
+from fnmatch import fnmatch
 from pyparsing import nestedExpr
 from trees import *
 
 
 def match_str(patt: str, word: str) ->bool:
     "matching strings with wildcards * anywhere"
-
-    # split patt into parts between *; ** reduces to *
-    parts = []
-    if patt.startswith('*'):
-        parts.append('*')
-    parts.extend(patt.split('*'))
-    if patt.endswith('*'):
-        parts.append('*')
-    parts = [p for p in parts if p]  # removing empty strings
-
-    # find matches part by part, shrinking the string
-    while parts:
-        if parts[0] == '*':    
-            if parts[1:]:  # must be nonempty and not *
-                if (p := parts[1]) in word:
-                    word = word[word.index(p)+len(p):]
-                    parts.pop(0)
-                    parts.pop(0)
-                else:
-                    return False
-            else:  # the last pattern was *, any tail matches
-                return True
-        elif word.startswith(p := parts[0]):
-            word = word[len(p):]
-            parts.pop(0)
-        else:
-            return False
-    return word == ''  # pattern exhausted, the word must be too
+    return fnmatch(word, patt)
 
 
 def intpred(n, x):
