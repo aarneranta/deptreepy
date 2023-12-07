@@ -10,18 +10,22 @@ usage:
 
 The command-arg combinations are
 
-   match_wordlines '<pattern>'
+   cosine_similarity <file> <file> <field>*
    match_subtrees '<pattern>'
+   match_wordlines '<pattern>'
+   statistics <field>*
+   underscore_fields <field>*
 
-They read CoNLL-U content from std-in, for example, with '<eng-ud.conllu¨
+The command without <file> arguments read CoNLL-U content from std-in,
+for example, with the redirection <eng-ud.conllu.
+
+The <field> arguments correspond to CoNLL-U word line fields from left to right:
+
+    ID FORM LEMMA POS XPOS FEATS HEAD DEPREL DEPS MISC
 
 The following patterns match both wordlines and trees, depending on the command:
 
-   FORM  <strpatt>
-   LEMMA <strpatt>
-   POS   <strpatt>
-   FEATS <strpatt>
-   DEPREL <strpatt>
+   <field>  <strpatt>
    HEAD_DISTANCE <inpred>
    AND <pattern>*
    OR  <pattern>*
@@ -42,13 +46,13 @@ The auxialiary concepts are:
 
 For example,
 
-   TREE (AND) (HEAD_DISTANCE >0) (HEAD_DISTANCE <0)
+   match_subtrees 'TREE (AND) (HEAD_DISTANCE >0) (HEAD_DISTANCE <0)'
 
 matches trees that have both a head-final and a head-initial constituent: `(AND)` is true
 of the head, because it poses no conditions on it, the first subtree comes before the head
 (has a positive distance to it) and the second one after the head (negative distance).
 
-   FEATS *=In*
+   match_wordlines 'FEATS *=In*'
 
 matches indicative, infinitive, inessive, and other features starting with "In".
 
@@ -70,6 +74,27 @@ if __name__ == '__main__':
             pattern = parse_pattern(sys.argv[2])
             print('#', pattern)
             match_subtrees(pattern, sys.stdin)
+        case 'statistics':
+            fields = sys.argv[2:]
+            wordlines = read_wordlines(sys.stdin)
+            for item in sorted_statistics(statistics(fields, wordlines)):
+                print(item)
+        case 'cosine_similarity':
+            file1, file2 = sys.argv[-2:]
+            fields = sys.argv[2:-2]
+            with open(file1) as lines1:
+                stats1 = statistics(fields, read_wordlines(lines1))
+            with open(file2) as lines2:
+                stats2 = statistics(fields, read_wordlines(lines2))
+            print(cosine_similarity(stats1, stats2))
+        case 'underscore_fields':
+            fields = sys.argv[2:]
+            wordlines = read_wordlines(sys.stdin)
+            for line in wordlines:
+                ldict = line.as_dict()
+                for field in fields:
+                    ldict[field] = '_'
+                print(WordLine(**ldict))
         case 'help' | _:
             print(help_message)
             

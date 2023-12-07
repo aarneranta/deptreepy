@@ -31,16 +31,8 @@ class Pattern(Tree):
 def match_wordline(patt: Pattern, word: WordLine) ->bool:
     "matching individual wordlines"
     match patt:
-        case Pattern('FORM', [form]):
-            return match_str(form, word.FORM)
-        case Pattern('LEMMA', [lemma]):
-            return match_str(lemma, word.LEMMA)
-        case Pattern('POS', [pos]):
-            return match_str(pos, word.POS)
-        case Pattern('FEATS', [feats]):
-            return match_str(feats, word.FEATS)
-        case Pattern('DEPREL', [rel]):
-            return match_str(rel, word.DEPREL)
+        case Pattern(field, [form]) if field in WORDLINE_FIELDS:
+            return match_str(form, word.as_dict()[field])
         case Pattern('HEAD_DISTANCE', [n]):
             return intpred(n, int(word.HEAD) - int(word.ID)) if word.ID.isdigit() else False
         case Pattern('AND', patts):

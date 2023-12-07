@@ -15,15 +15,22 @@ class WordLine:
     DEPS: str
     MISC: str
 
+    def as_dict(self):
+        return {
+          'ID': self.ID, 'FORM': self.FORM, 'LEMMA': self.LEMMA,
+          'POS': self.POS, 'XPOS': self.XPOS,
+          'FEATS': self.FEATS, 'HEAD': self.HEAD, 'DEPREL': self.DEPREL,
+          'DEPS': self.DEPS, 'MISC': self.MISC
+          }
+    
     def __str__(self):
-        return '\t'.join([
-            self.ID, self.FORM, self.LEMMA, self.POS, self.XPOS,
-            self.FEATS, self.HEAD, self.DEPREL, self.DEPS, self.MISC
-            ])
+        return '\t'.join(self.as_dict().values())
 
     def feats(self) -> dict:
         featvals = [fv.split('=') for fv in self.FEATS.split('|')]
         return {fv[0]: fv[1] for fv in featvals}
+
+WORDLINE_FIELDS = set('ID FORM LEMMA POS XPOS FEATS HEAD DEPREL DEPS MISC'.split())
 
 ROOT_LABEL = 'root'
 
@@ -43,11 +50,47 @@ class NotValidTree(Exception):
 
 
 def read_wordline(s: str) -> WordLine:
+    "read a string as a WordLine, fail if not valid"
     fields = s.split('\t')
     if len(fields) == 10 and fields[0][0].isdigit():
         return WordLine(*fields)
     else:
         raise NotValidWordLine
+
+def read_wordlines(lines):
+    "read a sequence of strings as WordLines, ignoring failed ones"
+    for line in lines:
+        try:
+            word = read_wordline(line)
+            yield word
+        except:
+            pass
+    
+    
+def statistics(fields, wordlines):
+    "frequency table of a combination of fields, as dictionary"
+    stats = {}
+    for word in wordlines:
+        value = tuple(word.as_dict()[field] for field in fields)
+        stats[value] = stats.get(value, 0) + 1
+    return stats
+
+
+def sorted_statistics(stats):
+    "frequency given as dict, sorted as list in descending order"
+    stats = list(stats.items())
+    stats.sort(key = lambda it: -it[1])
+    return stats
+
+
+def cosine_similarity(stats1, stats2):
+    "cosine similarity between two frequency dictionaries"
+    dot = 0
+    for k in stats1:
+        dot += stats1[k] * stats2.get(k, 0)
+    len1 = sum(v*v for v in stats1.values())
+    len2 = sum(v*v for v in stats2.values())
+    return dot/((len1 ** 0.5) * (len2 ** 0.5)) 
 
 
 @dataclass
