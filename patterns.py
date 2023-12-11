@@ -58,6 +58,14 @@ def match_deptree(patt: Pattern, tree: DepTree) ->bool:
                 return (len(patts) == len(sts := tree.subtrees) 
                          and match_deptree(pt, tree)
                          and all(match_deptree(*pt) for pt in zip(patts, sts)))
+            case Pattern('TREE_', [pt, *patts]):
+                return (match_deptree(pt, tree)
+                         and all(any(match_deptree(p, t) for t in tree.subtrees) for p in patts))
+            case Pattern('SEQUENCE', patts):
+                return (len(patts) == len(sts := tree.wordlines()) 
+                         and all(match_wordline(*pt) for pt in zip(patts, sts)))
+            case Pattern('SEQUENCE_', patts):
+                return (all(any(match_wordline(p, t) for t in tree.wordlines()) for p in patts))
             case Pattern('HAS_SUBTREE', patts):
                 return any(all(match_deptree(p, st) for p in patts) for st in tree.subtrees) 
             case Pattern('AND', patts):  # must be defined again for tree patterns

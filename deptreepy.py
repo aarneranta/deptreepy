@@ -37,6 +37,9 @@ The following patterns match only trees:
    LENGTH <intpred>
    DEPTH <intpred>
    TREE <pattern> <pattern>*
+   TREE_ <pattern> <pattern>*
+   SEQUENCE <pattern>*
+   SEQUENCE_ <pattern>*
    HAS_SUBTREE <pattern>*
 
 The auxialiary concepts are:
