@@ -76,7 +76,16 @@ def match_deptree(patt: Pattern, tree: DepTree) ->bool:
                 return not (match_deptree(patt, tree))
             case _:
                 return False
-        
+
+
+def match_wordlines(patt, lines):
+    for line in lines:
+        try:
+            t = read_wordline(line)
+            if match_wordline(patt, t):
+                print(t)
+        except:
+            pass
 
             
 def matches_in_deptree(patt: Pattern, tree: DepTree):
@@ -87,6 +96,20 @@ def matches_in_deptree(patt: Pattern, tree: DepTree):
     for subtree in tree.subtrees:
         ts.extend(matches_in_deptree(patt, subtree))
     return ts
+
+
+def change_in_wordline(patt: Pattern, word: WordLine) ->WordLine:
+    "changing the value of some field"
+    match patt:
+        case Pattern(field, [oldval, newval]) if field in WORDLINE_FIELDS:
+            wdict = word.as_dict()
+            if match_str(oldval, wdict[field]):
+                wdict[field] = newval
+                return WordLine(**wdict)
+            else:
+                return word
+        case _:
+            return word
 
 
 class ParseError(Exception):
@@ -132,4 +155,16 @@ def match_subtrees(patt, file):
             print('#', tree.sentence())
             print(tree)
 
+
+def change_wordlines(patt, lines):
+    for line in lines:
+        try:
+            t = read_wordline(line)
+            t = change_in_wordline(patt, t)
+            print(t)
+        except:
+            print(line.strip())
+
+
+        
         

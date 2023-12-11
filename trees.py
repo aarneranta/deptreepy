@@ -51,7 +51,7 @@ class NotValidTree(Exception):
 
 def read_wordline(s: str) -> WordLine:
     "read a string as a WordLine, fail if not valid"
-    fields = s.split('\t')
+    fields = s.strip().split('\t')
     if len(fields) == 10 and fields[0][0].isdigit():
         return WordLine(*fields)
     else:

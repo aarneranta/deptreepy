@@ -13,11 +13,14 @@ The command-arg combinations are
    cosine_similarity <file> <file> <field>*
    match_subtrees '<pattern>'
    match_wordlines '<pattern>'
+   change_wordlines '<pattern>'
    statistics <field>*
    underscore_fields <field>*
 
-The command without <file> arguments read CoNLL-U content from std-in,
+The commands without <file> arguments read CoNLL-U content from std-in,
 for example, with the redirection <eng-ud.conllu.
+
+The single quotes around <pattern> are necessary to group the pattern expression into one argument.
 
 The <field> arguments correspond to CoNLL-U word line fields from left to right:
 
@@ -82,6 +85,10 @@ if __name__ == '__main__':
             wordlines = read_wordlines(sys.stdin)
             for item in sorted_statistics(statistics(fields, wordlines)):
                 print(item)
+        case 'change_wordlines':
+            pattern = parse_pattern(sys.argv[2])
+            print('#', pattern)
+            change_wordlines(pattern, sys.stdin)
         case 'cosine_similarity':
             file1, file2 = sys.argv[-2:]
             fields = sys.argv[2:-2]
