@@ -101,6 +101,11 @@ def matches_in_deptree(patt: Pattern, tree: DepTree):
 def change_in_wordline(patt: Pattern, word: WordLine) ->WordLine:
     "changing the value of some field"
     match patt:
+        case Pattern('IF', [condpatt, changepatt]):
+            if match_wordline(condpatt, word):
+                return change_in_wordline(changepatt, word)
+            else:
+                return word
         case Pattern(field, [oldval, newval]) if field in WORDLINE_FIELDS:
             wdict = word.as_dict()
             if match_str(oldval, wdict[field]):

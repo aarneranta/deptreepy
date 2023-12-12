@@ -67,4 +67,12 @@ matches indicative, infinitive, inessive, and other features starting with "In".
 
 Quotes are not used outside string patterns: if used, they can only match strings with
 actual quotes.
+
+In addition to search patterns, there are ones that change the trees, invoked by the
+command change_wordlines:
+
+  <field> <strpatt> <str>
+  IF <pattern> <changepattern>
+
+Command change_subtrees forthcoming.
 ```
