@@ -16,11 +16,14 @@ The command-arg combinations are
    cosine_similarity <file> <file> <field>*
    match_subtrees '<pattern>'
    match_wordlines '<pattern>'
+   change_wordlines '<pattern>'
    statistics <field>*
    underscore_fields <field>*
 
-The command without <file> arguments read CoNLL-U content from std-in,
+The commands without <file> arguments read CoNLL-U content from std-in,
 for example, with the redirection <eng-ud.conllu.
+
+The single quotes around <pattern> are necessary to group the pattern expression into one argument.
 
 The <field> arguments correspond to CoNLL-U word line fields from left to right:
 
@@ -40,6 +43,9 @@ The following patterns match only trees:
    LENGTH <intpred>
    DEPTH <intpred>
    TREE <pattern> <pattern>*
+   TREE_ <pattern> <pattern>*
+   SEQUENCE <pattern>*
+   SEQUENCE_ <pattern>*
    HAS_SUBTREE <pattern>*
 
 The auxialiary concepts are:
@@ -62,4 +68,3 @@ matches indicative, infinitive, inessive, and other features starting with "In".
 Quotes are not used outside string patterns: if used, they can only match strings with
 actual quotes.
 ```
-
