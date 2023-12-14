@@ -47,6 +47,7 @@ The following patterns match only trees:
    SEQUENCE <pattern>*
    SEQUENCE_ <pattern>*
    HAS_SUBTREE <pattern>*
+   IS_NONPROJECTIVE
 
 The auxialiary concepts are:
 

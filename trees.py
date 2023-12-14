@@ -153,6 +153,33 @@ def build_deptree(ns: list) -> DepTree:
         raise NotValidTree
 
     
+def relabel_deptree(tree: DepTree) -> DepTree:
+    "set DEPREL of head to root and its HEAD to 0, renumber wordlines to 1, 2, ..."
+    root = tree.root
+    root.MISC = root.MISC + '('+root.DEPREL+')'
+    root.DEPREL = 'root'
+    words = tree.wordlines()  # sorted by ID
+    numbers = {w.ID:  str(i) for w, i in zip(words, range(1, len(words) + 1))}
+    numbers[root.HEAD] = '0'
+
+    def renumber(t):
+        if t.root.ID.isdigit():
+            t.root.ID = numbers[t.root.ID]
+        t.root.HEAD = numbers[t.root.HEAD]
+        for st in t.subtrees:
+            renumber(st)
+        return t
+
+    return renumber(tree)
+
+
+def nonprojective(tree: DepTree) -> bool:
+    "if a subtree is not projective, i.e. does not span over a continuous sequence"
+    ids = [int(w.ID) for w in tree.wordlines() if w.ID.isdigit()]
+    ids.sort()
+    return len(ids) == max(ids) - min(ids)
+
+    
 def echo_conllu_file(file):
     for line in file:
         try:

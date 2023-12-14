@@ -54,6 +54,8 @@ def match_deptree(patt: Pattern, tree: DepTree) ->bool:
                 return intpred(n, len(tree))
             case Pattern('DEPTH', [n]):
                 return intpred(n, tree.depth())
+            case Pattern ('IS_NONPROJECTIVE', _):
+                return nonprojective(tree)
             case Pattern('TREE', [pt, *patts]):
                 return (len(patts) == len(sts := tree.subtrees) 
                          and match_deptree(pt, tree)
@@ -158,7 +160,8 @@ def match_subtrees(patt, file):
     for deptree in conllu_file_trees(file):
         for tree in matches_in_deptree(patt, deptree):
             print('#', tree.sentence())
-            print(tree)
+            print(tree)  # relabel_deptree(tree))
+            print()
 
 
 def change_wordlines(patt, lines):
