@@ -1,5 +1,6 @@
 # deptreepy
-Python utilities for dependency trees, replicating some of gf-ud
+Python utilities for dependency trees, replicating some of gf-ud.
+Designed to work on CoNNL-U data, such as in https://universaldependencies.org
 
 For a help message: do
 ```
@@ -14,16 +15,22 @@ usage:
 The command-arg combinations are
 
    cosine_similarity <file> <file> <field>*
-   match_subtrees '<pattern>'
-   match_wordlines '<pattern>'
-   change_wordlines '<pattern>'
-   statistics <field>*
-   underscore_fields <field>*
+   'match_subtrees <pattern>'
+   'match_wordlines <pattern>'
+   'change_wordlines <pattern>'
+   'statistics <field>*'
+   'underscore_fields <field>*'
 
 The commands without <file> arguments read CoNLL-U content from std-in,
 for example, with the redirection <eng-ud.conllu.
+These command can also be piped: for example,
 
-The single quotes around <pattern> are necessary to group the pattern expression into one argument.
+   python3 deptreepy.py python3 'match_wordlines DEPREL nsubj | statistics POS' <FILE.conllu
+   
+gives statistics of POS (part of speech) of words that appear as subjects (DEPREL nsubj).
+   
+The single quotes around the commands where they are used above are
+necessary to group the command into one command-line argument.
 
 The <field> arguments correspond to CoNLL-U word line fields from left to right:
 
@@ -56,17 +63,17 @@ The auxialiary concepts are:
 
 For example,
 
-   match_subtrees 'TREE (AND) (HEAD_DISTANCE >0) (HEAD_DISTANCE <0)'
+   match_subtrees TREE (AND) (HEAD_DISTANCE >0) (HEAD_DISTANCE <0)
 
 matches trees that have both a head-final and a head-initial constituent: `(AND)` is true
 of the head, because it poses no conditions on it, the first subtree comes before the head
 (has a positive distance to it) and the second one after the head (negative distance).
 
-   match_wordlines 'FEATS *=In*'
+   match_wordlines FEATS *=In*
 
 matches indicative, infinitive, inessive, and other features starting with "In".
 
-Quotes are not used outside string patterns: if used, they can only match strings with
+Quotes are not used around string patterns: if used, they can only match strings with
 actual quotes.
 
 In addition to search patterns, there are ones that change the trees, invoked by the
@@ -75,5 +82,5 @@ command change_wordlines:
   <field> <strpatt> <str>
   IF <pattern> <changepattern>
 
-Command change_subtrees forthcoming.
+The command change_subtrees is forthcoming, as well as some other commands and patterns.
 ```

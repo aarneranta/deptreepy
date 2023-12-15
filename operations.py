@@ -220,12 +220,12 @@ def postprocess_operation(op: Operation) -> Operation:
 # invalid_operation = pipe([strs2wordlines, strs2wordlines])
 
 
-if __name__ == '__main__':
-    oper = parse_operation_pipe(sys.argv[1])
+def execute_pipe_on_strings(command: str, strs: Iterable[str]): 
+    oper = parse_operation_pipe(command)
     oper = preprocess_operation(oper)
     oper = postprocess_operation(oper)
     print('# ', oper)
-    for t in oper(sys.stdin):
+    for t in oper(strs):
         print(t)
 
 
