@@ -1,6 +1,7 @@
 # operations that transform dependency structures and can be piped if types match
 
 import sys
+import os  # temporarily, to call VisualizeUD.hs
 from dataclasses import dataclass
 from typing import Iterable, Callable
 from trees import *
@@ -103,12 +104,21 @@ def deptrees2strs(trees: Iterable[DepTree]) -> Iterable[str]:
     for tree in trees:
         yield str(tree)
         yield ''
+
+@operation
+def wordliness2strs(stanzas: Iterable[list[WordLine]]) -> Iterable[str]:
+    "convert a stream of lists of wordlines to empty-line-separated stanzas"
+    for ws in stanzas:
+        for w in ws:
+            yield str(w)
+        yield ''
         
 
 @operation
 def deptrees2wordlines(trees: Iterable[DepTree]) -> Iterable[list[WordLine]]:
-    "convert a stream of deptrees to a list of lists of wordlines"
+    "convert a stream of deptrees to a stream of valid CoNNL trees (relabeled)"
     for tree in trees:
+        tree = relabel_deptree(tree)
         yield tree.wordlines()
 
 
@@ -166,6 +176,12 @@ def match_subtrees(patt: Pattern) -> Operation:
         )
 
 
+# @operation
+# def wordlines2latex(stanzas: Iterable[list[WordLine]]) -> str:
+#     wordliness2strs(stanzas) 
+    
+        
+
 def change_wordlines(patt: Pattern) -> Operation:
     return Operation (
         lambda ws: (change_in_wordline(patt, w) for w in ws),
@@ -184,6 +200,8 @@ def parse_operation(ss: list[str]) -> Operation:
             return match_subtrees(parse_pattern(' '.join([*ww])))
         case ['change_wordlines', *ww]:
             return change_wordlines(parse_pattern(' '.join([*ww])))
+        case ['deptrees2wordlines']:
+            return deptrees2wordlines
         case ['statistics', *ww]:
             return statistics(ww)
         case ['underscore_fields', *ww]:
@@ -212,6 +230,8 @@ def postprocess_operation(op: Operation) -> Operation:
         return pipe([op, wordlines2strs])
     elif op.valtype == Iterable[DepTree]:
         return pipe([op, deptrees2strs])
+    elif op.valtype == Iterable[list[WordLine]]:
+        return pipe([op, wordliness2strs]) 
     else:
         return op
 
