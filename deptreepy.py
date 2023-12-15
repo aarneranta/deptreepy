@@ -29,7 +29,7 @@ if __name__ == '__main__':
         case 'change_wordlines':
             pattern = parse_pattern(sys.argv[2])
             print('#', pattern)
-            change_wordlines(pattern, sys.stdin)
+            change_line_wordlines(pattern, sys.stdin)
         case 'cosine_similarity':
             file1, file2 = sys.argv[-2:]
             fields = sys.argv[2:-2]

@@ -9,6 +9,7 @@ from patterns import *
 
 @dataclass
 class Operation:
+    "typed stream operations"
     oper: Callable
     argtype: type
     valtype: type
@@ -20,8 +21,27 @@ class Operation:
     def __doc__(self):
         return doc
 
-
+    def pipe_two(self, oper2):
+        "apply self, then apply another operation on the result"
+        if (t1 := self.valtype) == (t2 := oper2.argtype):
+            return Operation(
+                lambda x: oper2(self(x)),
+                self.argtype,
+                oper2.valtype,
+                self.name + ' | ' + oper2.name,
+                '\n'.join([self.doc, 'then' + oper2.doc])
+                )
+        else:
+            raise TypeError(' '.join(
+                ['output type', str(t1), 'of', oper1.name,
+                     'does not match input type', str(t2), 'of', oper2.name]))
+        
+    def __mul__(self, oper1):
+        return pipe_two(oper1, self)
+        
+    
 def operation(f: Callable) -> Operation:
+    "a decorator that makes a one-argument function into an operation"
     if len(anns := f.__annotations__) == 2 and 'return' in anns:
         return Operation(
                 f,
@@ -32,26 +52,12 @@ def operation(f: Callable) -> Operation:
     else:
         raise TypeError("expected type-decorated one-argument function, found " + f.__name__)
 
-
-def pipe_two(oper1: Operation, oper2: Operation) -> Operation:
-    if (t1 := oper1.valtype) == (t2 := oper2.argtype):
-        return Operation(
-            lambda x: oper2(oper1(x)),
-            oper1.argtype,
-            oper2.valtype,
-            oper1.name + ' | ' + oper2.name,
-            '\n'.join([oper1.doc, 'then' + oper2.doc])
-            )
-    else:
-        raise TypeError(' '.join(
-            ['output type', str(t1), 'of', oper1.name,
-                 'does not match input type', str(t2), 'of', oper2.name]))
-
     
 def pipe(opers: list[Operation]) -> Operation:
+    "pipe a list of operations together"
     oper = opers[0]
     for oper2 in opers[1:]:
-        oper = pipe_two(oper, oper2)
+        oper = oper.pipe_two(oper2)
     return oper
     
 
@@ -113,6 +119,17 @@ def wordlines2sentences(wordliness: Iterable[list[WordLine]]) -> Iterable[str]:
         yield ' '.join([word.FORM for word in wordlines])
 
 
+@operation
+def undescore_fields(fields: list[str]) -> Operation:
+    return Operation (
+        lambda ws: (replace_by_underscores(fields, w) for w in ws),
+        Iterable[WordLine],
+        Iterable[WordLine],
+        "underscore fields",
+        "replace the values of given fields by underscores"
+        )
+
+
 def statistics(fields: list[str]) -> Operation:
     return Operation (
         lambda ws: sorted_statistics(wordline_statistics(fields, ws)),
@@ -149,14 +166,28 @@ def match_subtrees(patt: Pattern) -> Operation:
         )
 
 
+def change_wordlines(patt: Pattern) -> Operation:
+    return Operation (
+        lambda ws: (change_in_wordline(patt, w) for w in ws),
+        Iterable[WordLine],
+        Iterable[WordLine],
+        'match_wordlines',
+        'pattern matching with wordlines, yielding the ones that match'
+        )    
+
+
 def parse_operation(ss: list[str]) -> Operation:
     match ss:
         case ['match_wordlines', *ww]:
             return match_wordlines(parse_pattern(' '.join([*ww])))
         case ['match_subtrees', *ww]:
             return match_subtrees(parse_pattern(' '.join([*ww])))
+        case ['change_wordlines', *ww]:
+            return change_wordlines(parse_pattern(' '.join([*ww])))
         case ['statistics', *ww]:
             return statistics(ww)
+        case ['underscore_fields', *ww]:
+            return undescore_fields(ww)
         case _:
             raise ParseError(' '.join(['operation'] + ss + ['not matched']))
 
@@ -183,8 +214,12 @@ def postprocess_operation(op: Operation) -> Operation:
         return pipe([op, deptrees2strs])
     else:
         return op
-        
-        
+
+    
+# an example of "static typing", i.e. checked and rejected before applied to input
+# invalid_operation = pipe([strs2wordlines, strs2wordlines])
+
+
 if __name__ == '__main__':
     oper = parse_operation_pipe(sys.argv[1])
     oper = preprocess_operation(oper)

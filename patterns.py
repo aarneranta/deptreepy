@@ -164,7 +164,8 @@ def match_subtrees(patt, file):
             print()
 
 
-def change_wordlines(patt, lines):
+# to be deprecated
+def change_line_wordlines(patt, lines):
     for line in lines:
         try:
             t = read_wordline(line)

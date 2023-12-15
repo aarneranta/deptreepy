@@ -57,6 +57,7 @@ def read_wordline(s: str) -> WordLine:
     else:
         raise NotValidWordLine
 
+
 def read_wordlines(lines):
     "read a sequence of strings as WordLines, ignoring failed ones"
     for line in lines:
@@ -65,7 +66,14 @@ def read_wordlines(lines):
             yield word
         except:
             pass
-    
+
+
+def replace_by_underscores(fields, wordline):
+    ldict = wordline.as_dict()
+    for field in fields:
+        ldict[field] = '_'
+    return WordLine(**ldict)
+
     
 def wordline_statistics(fields, wordlines):
     "frequency table of a combination of fields, as dictionary"
