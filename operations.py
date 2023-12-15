@@ -67,7 +67,7 @@ def strs2wordlines(lines: Iterable[str]) -> Iterable[WordLine]:
 
 
 @operation
-def lines2deptrees(lines: Iterable[str]) -> Iterable[DepTree]:
+def strs2deptrees(lines: Iterable[str]) -> Iterable[DepTree]:
     "convert a list of lines into a deptree"
     comms = []
     nodes = []
@@ -84,6 +84,20 @@ def lines2deptrees(lines: Iterable[str]) -> Iterable[DepTree]:
             comms = []
             nodes = []
 
+@operation
+def wordlines2strs(lines: Iterable[WordLine]) -> Iterable[str]:
+    "convert wordlines to tab-separated strings line by line"
+    for line in lines:
+        yield str(line)
+
+        
+@operation
+def deptrees2strs(trees: Iterable[DepTree]) -> Iterable[str]:
+    "convert wordlines to tab-separated strings line by line"
+    for tree in trees:
+        yield str(tree)
+        yield ''
+        
 
 @operation
 def deptrees2wordlines(trees: Iterable[DepTree]) -> Iterable[list[WordLine]]:
@@ -99,36 +113,84 @@ def wordlines2sentences(wordliness: Iterable[list[WordLine]]) -> Iterable[str]:
         yield ' '.join([word.FORM for word in wordlines])
 
 
-def word_match(s: str) -> Operation:
-    patt = parse_pattern(s)
+def statistics(fields: list[str]) -> Operation:
+    return Operation (
+        lambda ws: sorted_statistics(wordline_statistics(fields, ws)),
+        Iterable[WordLine],
+        list,
+        'statistics',
+        "frequency table of a combination of fields, sorted as a list in descending order"
+        )
+
+
+def match_wordlines(patt: Pattern) -> Operation:
     return Operation (
         lambda ws: (w for w in ws if match_wordline(patt, w)),
         Iterable[WordLine],
         Iterable[WordLine],
-        'word_match',
+        'match_wordlines',
         'pattern matching with wordlines, yielding the ones that match'
         )
         
 
-def subtree_match(s: str) -> Operation:
-    patt = parse_pattern(s)
+def match_subtrees(patt: Pattern) -> Operation:
+
     def matcht(ts):
         for tr in ts:
             for t in matches_in_deptree(patt, tr):
                 yield t
+                
     return Operation (
         matcht,
         Iterable[DepTree],
         Iterable[DepTree],
-        'subtree_match',
+        'match_subtrees',
         'pattern matching with trees and subtrees, yielding the ones that match'
         )
+
+
+def parse_operation(ss: list[str]) -> Operation:
+    match ss:
+        case ['match_wordlines', *ww]:
+            return match_wordlines(parse_pattern(' '.join([*ww])))
+        case ['match_subtrees', *ww]:
+            return match_subtrees(parse_pattern(' '.join([*ww])))
+        case ['statistics', *ww]:
+            return statistics(ww)
+        case _:
+            raise ParseError(' '.join(['operation'] + ss + ['not matched']))
+
+
+def parse_operation_pipe(s: str) -> Operation:    
+    return pipe([parse_operation(op.split()) for op in s.split('|')])
+
+
+def preprocess_operation(op: Operation) -> Operation:
+    "convert file-like input into type expected by operation"
+    if op.argtype == Iterable[WordLine]:
+        return pipe([strs2wordlines, op])
+    elif op.argtype == Iterable[DepTree]:
+        return pipe([strs2deptrees, op])
+    else:
+        return op
+
+    
+def postprocess_operation(op: Operation) -> Operation:
+    "convert the output of operations to strings"
+    if op.valtype == Iterable[WordLine]:
+        return pipe([op, wordlines2strs])
+    elif op.valtype == Iterable[DepTree]:
+        return pipe([op, deptrees2strs])
+    else:
+        return op
+        
         
 if __name__ == '__main__':
-    oper = lines2deptrees
-    oper = pipe([lines2deptrees, deptrees2wordlines, wordlines2sentences])
-    oper = pipe([lines2deptrees, subtree_match('DEPREL nsubj'), deptrees2wordlines, wordlines2sentences])
+    oper = parse_operation_pipe(sys.argv[1])
+    oper = preprocess_operation(oper)
+    oper = postprocess_operation(oper)
+    print('# ', oper)
     for t in oper(sys.stdin):
         print(t)
-        print()
+
 

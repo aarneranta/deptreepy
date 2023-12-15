@@ -24,7 +24,7 @@ if __name__ == '__main__':
         case 'statistics':
             fields = sys.argv[2:]
             wordlines = read_wordlines(sys.stdin)
-            for item in sorted_statistics(statistics(fields, wordlines)):
+            for item in sorted_statistics(wordline_statistics(fields, wordlines)):
                 print(item)
         case 'change_wordlines':
             pattern = parse_pattern(sys.argv[2])

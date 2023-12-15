@@ -67,7 +67,7 @@ def read_wordlines(lines):
             pass
     
     
-def statistics(fields, wordlines):
+def wordline_statistics(fields, wordlines):
     "frequency table of a combination of fields, as dictionary"
     stats = {}
     for word in wordlines:
