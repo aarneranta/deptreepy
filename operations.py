@@ -60,10 +60,14 @@ def pipe(opers: list[Operation]) -> Operation:
     for oper2 in opers[1:]:
         oper = oper.pipe_two(oper2)
     return oper
-    
+
+
+# CoNLL-U input is a stream of lines representing a valid stream of trees
+CoNLLU = Iterable[str]
+
 
 @operation
-def strs2wordlines(lines: Iterable[str]) -> Iterable[WordLine]:
+def conllu2wordlines(lines: CoNLLU) -> Iterable[WordLine]:
     "read a sequence of strings as WordLines, ignoring failed ones"
     for line in lines:
         try:
@@ -74,7 +78,7 @@ def strs2wordlines(lines: Iterable[str]) -> Iterable[WordLine]:
 
 
 @operation
-def strs2deptrees(lines: Iterable[str]) -> Iterable[DepTree]:
+def conllu2deptrees(lines: CoNLLU) -> Iterable[DepTree]:
     "convert a list of lines into a deptree"
     comms = []
     nodes = []
@@ -105,22 +109,23 @@ def deptrees2strs(trees: Iterable[DepTree]) -> Iterable[str]:
         yield str(tree)
         yield ''
 
+
 @operation
-def wordliness2strs(stanzas: Iterable[list[WordLine]]) -> Iterable[str]:
+def deptrees2wordlines(trees: Iterable[DepTree]) -> Iterable[list[WordLine]]:
+    "convert a stream of deptrees to a stream of relabeled lists of wordlines"
+    for tree in trees:
+        tree = relabel_deptree(tree)
+        yield tree.wordlines()
+
+
+@operation
+def wordliness2conllu(stanzas: Iterable[list[WordLine]]) -> CoNLLU:
     "convert a stream of lists of wordlines to empty-line-separated stanzas"
     for ws in stanzas:
         for w in ws:
             yield str(w)
         yield ''
         
-
-@operation
-def deptrees2wordlines(trees: Iterable[DepTree]) -> Iterable[list[WordLine]]:
-    "convert a stream of deptrees to a stream of valid CoNNL trees (relabeled)"
-    for tree in trees:
-        tree = relabel_deptree(tree)
-        yield tree.wordlines()
-
 
 @operation
 def wordlines2sentences(wordliness: Iterable[list[WordLine]]) -> Iterable[str]:
@@ -139,7 +144,23 @@ def undescore_fields(fields: list[str]) -> Operation:
         "replace the values of given fields by underscores"
         )
 
+def take_trees(begin: int, end: int) -> Operation:
+    
+    def take(ts):
+        i = begin
+        while i < end:
+            yield(next(ts))
+            i += 1
+            
+    return Operation (
+        take,
+        Iterable[DepTree],
+        Iterable[DepTree],
+        "take_trees",
+        "take a selection of trees from <begin> to <end>-1 (counting from 0)"
+        )
 
+        
 def statistics(fields: list[str]) -> Operation:
     return Operation (
         lambda ws: sorted_statistics(wordline_statistics(fields, ws)),
@@ -202,6 +223,8 @@ def parse_operation(ss: list[str]) -> Operation:
             return change_wordlines(parse_pattern(' '.join([*ww])))
         case ['deptrees2wordlines']:
             return deptrees2wordlines
+        case ['take_trees', begin, end]:
+            return take_trees(int(begin), int(end))
         case ['statistics', *ww]:
             return statistics(ww)
         case ['underscore_fields', *ww]:
@@ -217,9 +240,9 @@ def parse_operation_pipe(s: str) -> Operation:
 def preprocess_operation(op: Operation) -> Operation:
     "convert file-like input into type expected by operation"
     if op.argtype == Iterable[WordLine]:
-        return pipe([strs2wordlines, op])
+        return pipe([conllu2wordlines, op])
     elif op.argtype == Iterable[DepTree]:
-        return pipe([strs2deptrees, op])
+        return pipe([conllu2deptrees, op])
     else:
         return op
 
@@ -231,13 +254,13 @@ def postprocess_operation(op: Operation) -> Operation:
     elif op.valtype == Iterable[DepTree]:
         return pipe([op, deptrees2strs])
     elif op.valtype == Iterable[list[WordLine]]:
-        return pipe([op, wordliness2strs]) 
+        return pipe([op, wordliness2conllu]) 
     else:
         return op
 
     
 # an example of "static typing", i.e. checked and rejected before applied to input
-# invalid_operation = pipe([strs2wordlines, strs2wordlines])
+# invalid_operation = pipe([conllu2wordlines, conllu2wordlines])
 
 
 def execute_pipe_on_strings(command: str, strs: Iterable[str]): 

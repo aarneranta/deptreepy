@@ -19,6 +19,7 @@ The command-arg combinations are
    'match_wordlines <pattern>'
    'change_wordlines <pattern>'
    'statistics <field>*'
+   'take_trees <int-from> <int-to>'
    'underscore_fields <field>*'
 
 The commands without <file> arguments read CoNLL-U content from std-in,
@@ -83,4 +84,20 @@ command change_wordlines:
   IF <pattern> <changepattern>
 
 The command change_subtrees is forthcoming, as well as some other commands and patterns.
+
+To visualize dependency trees, you can use the Haskell program utils/VisualizeUD.hs.
+It can be used directly on CoNLL-U input,
+
+  cat FILE.conllu | runghc utils/VisualizeUD.hs (latex | svg)
+
+to produce either a LaTeX file or an HTML file with embedded SVG images.
+To pipe into this visualization from deptreepy, use the deptrees2wordlines operation
+at the end of the pipe, for instance,
+
+  cat FILE.conllu |
+  python3 deptreepy.py 'match_subtrees IS_NONPROJECTIVE | deptrees2wordlines' |
+  runghc utils/VisualizeUD.hs svg
+
+The svg option is recommended for non-latin alphabets such as Chinese, unless you have
+suitable LaTeX packages available.
 ```

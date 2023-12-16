@@ -21,16 +21,21 @@ import Data.Ord (comparing)
 import Data.Char (isDigit)
 import Data.Maybe (fromMaybe)
 import Text.PrettyPrint
+import System.Environment (getArgs)
 
 ---------------------- should be a separate module?
 
 -- visualization with SVG and LaTeX output. AR Nov 2015 - Dec 2023
 
--- conll2svg :: [String] -> String
-
-main = interact mkLatex
+main = do
+  tgt <- getArgs
+  interact (wrap (mk tgt))
   where
-    mkLatex = conlls2latexDoc . map unlines . stanzas . lines
+    mk tgt = case tgt of
+      ["latex"] -> conlls2latexDoc
+      ["svg"] -> conlls2svgHTMLDoc
+      _ -> error ("usage: VisualizeUD (latex | svg)")
+    wrap mk = mk . map unlines . stanzas . lines
     stanzas ls = case break null ls of
       (l1, _:l2) -> l1 : stanzas l2
       _ -> [ls]
@@ -44,6 +49,18 @@ conlls2latexDoc =
   intersperse (text "" $+$ app "vspace" (text "4mm")) .
   map conll2latex .
   filter (not . null)
+
+conlls2svgHTMLDoc :: [String] -> String
+conlls2svgHTMLDoc =
+  render .
+  embedInHTML .
+  map conll2svg .
+  filter (not . null)
+
+-- toSVG :: [LaTeX] -> [SVG]
+
+conll2svg :: String -> Doc
+conll2svg = ppSVG . toSVG . conll2latex' . parseCoNLL
 
 conll2latex :: String -> Doc
 conll2latex = ppLaTeX . conll2latex' . parseCoNLL
@@ -260,12 +277,28 @@ data SVG = CharData String | Elem TagName Attrs [SVG]
 type TagName = String
 type Attrs = [(String,String)]
 
-ppSVG svg =
-  vcat [text "<?xml version=\"1.0\" standalone=\"no\"?>",
+embedInHTML svgs =
+  vcat $
+     [
+      text "<!DOCTYPE html>",
+      text "<html>",
+      text "<body>",
+      vcat svgs,
+      text "</body>",
+      text "</html>"
+     ] 
+
+addHeaderSVG svgs =
+  vcat $
+       [text "<?xml version=\"1.0\" standalone=\"no\"?>",
         text "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\"",
         text "\"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">",
-        text "",
-        vcat (map ppSVG1 svg)] -- It should be a single <svg> element...
+        text ""] ++
+        svgs -- It should be a single <svg> element...
+
+
+ppSVG svg =
+  vcat (map ppSVG1 svg) -- It should be a single <svg> element...
   where
     ppSVG1 svg1 =
       case svg1 of
