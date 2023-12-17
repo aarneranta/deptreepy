@@ -22,6 +22,7 @@ The command-arg combinations are
    'statistics <field>*'
    'take_trees <int-from> <int-to>'
    'underscore_fields <field>*'
+   'extract_sentences'
    'from_script <file>'
 
 The commands without <file> arguments read CoNLL-U content from std-in,
@@ -84,6 +85,7 @@ command change_wordlines:
 
   <field> <strpatt> <str>
   IF <pattern> <changepattern>
+  AND <changepatterd>*
 
 The command change_subtrees admits the following patterns:
 

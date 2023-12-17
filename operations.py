@@ -34,7 +34,7 @@ class Operation:
                 )
         else:
             raise TypeError(' '.join(
-                ['output type', str(t1), 'of', oper1.name,
+                ['output type', str(t1), 'of', self.name,
                      'does not match input type', str(t2), 'of', oper2.name]))
         
     def __mul__(self, oper1):
@@ -134,6 +134,9 @@ def wordlines2sentences(wordliness: Iterable[list[WordLine]]) -> Iterable[str]:
         yield ' '.join([word.FORM for word in wordlines])
 
 
+extract_sentences : Operation = pipe([deptrees2wordlines, wordlines2sentences])
+
+
 @operation
 def undescore_fields(fields: list[str]) -> Operation:
     return Operation (
@@ -219,7 +222,7 @@ def change_subtrees(patt: Pattern) -> Operation:
 
 def from_script(filename: str) -> Operation:
     with open(filename) as script:
-        return parse_operation(script.read().split())
+        return parse_operation_pipe(script.read())
             
 
 def parse_operation(ss: list[str]) -> Operation:
@@ -232,9 +235,11 @@ def parse_operation(ss: list[str]) -> Operation:
             return change_wordlines(parse_pattern(' '.join([*ww])))
         case ['change_subtrees', *ww]:
             return change_subtrees(parse_pattern(' '.join([*ww])))
+        case ['extract_sentences']:
+            return extract_sentences
         case ['deptrees2wordlines']:
             return deptrees2wordlines
-        case ['take_trees', begin, end]:
+        case ['take_just_trees', begin, end]:
             return take_trees(int(begin), int(end))
         case ['statistics', *ww]:
             return statistics(ww)

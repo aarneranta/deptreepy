@@ -115,6 +115,10 @@ def change_wordline(patt: Pattern, word: WordLine) ->WordLine:
                 return WordLine(**wdict)
             else:
                 return word
+        case Pattern('AND', patts):  # cumulative changes in the order of patts
+            for patt in patts:
+                word = change_wordline(patt, word)
+            return word
         case _:
             return word
 
@@ -130,7 +134,11 @@ def change_deptree(patt: Pattern, tree: DepTree) -> DepTree:
         case Pattern('PRUNE', [depth]):
             depth = int(depth)
             return prune_subtrees_below(tree, depth)
+        case Pattern('FILTER_SUBTREES', [condpatt]):
+            tree.subtrees = [t for t in tree.subtrees if match_deptree(condpatt, t)]
+            return tree
         case _:
+            tree.root = change_wordline(patt, tree.root)
             return tree
 
     

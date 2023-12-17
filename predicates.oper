@@ -1,0 +1,11 @@
+change_subtrees FILTER_SUBTREES
+    (OR (DEPREL nsubj) (DEPREL *obj) (DEPREL obl) (DEPREL case) (DEPREL cop)
+        (DEPREL xcomp) (DEPREL ccomp) (DEPREL mark))
+| change_subtrees AND
+    (IF (DEPREL nsubj) (FORM * X))
+    (IF (DEPREL obj) (FORM * Y))
+    (IF (DEPREL obl) (FORM * Z))
+    (IF (DEPREL ccomp) (FORM * S))
+    (IF (DEPREL xcomp) (FORM * VP))
+| extract_sentences
+  
