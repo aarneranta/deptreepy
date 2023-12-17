@@ -90,7 +90,7 @@ def match_wordlines(patt, lines):
             pass
 
             
-def matches_in_deptree(patt: Pattern, tree: DepTree):
+def matches_in_deptree(patt: Pattern, tree: DepTree) -> bool:
     "finding all subtrees that match a pattern"
     ts = []
     if match_deptree(patt, tree):
@@ -100,12 +100,12 @@ def matches_in_deptree(patt: Pattern, tree: DepTree):
     return ts
 
 
-def change_in_wordline(patt: Pattern, word: WordLine) ->WordLine:
-    "changing the value of some field"
+def change_wordline(patt: Pattern, word: WordLine) ->WordLine:
+    "changing the value of some field in accordance with a pattern"
     match patt:
         case Pattern('IF', [condpatt, changepatt]):
             if match_wordline(condpatt, word):
-                return change_in_wordline(changepatt, word)
+                return change_wordline(changepatt, word)
             else:
                 return word
         case Pattern(field, [oldval, newval]) if field in WORDLINE_FIELDS:
@@ -119,6 +119,28 @@ def change_in_wordline(patt: Pattern, word: WordLine) ->WordLine:
             return word
 
 
+def change_deptree(patt: Pattern, tree: DepTree) -> DepTree:
+    "change a tree in accordance with a pattern"
+    match patt:
+        case Pattern('IF', [condpatt, changepatt]):
+            if match_deptree(condpatt, tree):
+                return change_deptree(changepatt, tree)
+            else:
+                return tree
+        case Pattern('PRUNE', [depth]):
+            depth = int(depth)
+            return prune_subtrees_below(tree, depth)
+        case _:
+            return tree
+
+    
+def changes_in_deptree(patt: Pattern, tree: DepTree) -> DepTree:
+    "performing change in a tree and recursively in all changed subtrees"
+    tree = change_deptree(patt, tree)
+    tree.subtrees = [change_deptree(patt, t) for t in tree.subtrees]
+    return tree
+
+    
 class ParseError(Exception):
     pass
 

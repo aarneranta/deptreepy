@@ -197,21 +197,30 @@ def match_subtrees(patt: Pattern) -> Operation:
         )
 
 
-# @operation
-# def wordlines2latex(stanzas: Iterable[list[WordLine]]) -> str:
-#     wordliness2strs(stanzas) 
-    
-        
-
 def change_wordlines(patt: Pattern) -> Operation:
     return Operation (
-        lambda ws: (change_in_wordline(patt, w) for w in ws),
+        lambda ws: (change_wordline(patt, w) for w in ws),
         Iterable[WordLine],
         Iterable[WordLine],
-        'match_wordlines',
-        'pattern matching with wordlines, yielding the ones that match'
+        'change_wordlines',
+        'pattern-based changes in wordlines'
         )    
 
+
+def change_subtrees(patt: Pattern) -> Operation:
+    return Operation (
+        lambda ws: (changes_in_deptree(patt, w) for w in ws),
+        Iterable[DepTree],
+        Iterable[DepTree],
+        'change_subtrees',
+        'pattern-based changes recursively in subtrees, top-down'
+        )
+
+
+def from_script(filename: str) -> Operation:
+    with open(filename) as script:
+        return parse_operation(script.read().split())
+            
 
 def parse_operation(ss: list[str]) -> Operation:
     match ss:
@@ -221,6 +230,8 @@ def parse_operation(ss: list[str]) -> Operation:
             return match_subtrees(parse_pattern(' '.join([*ww])))
         case ['change_wordlines', *ww]:
             return change_wordlines(parse_pattern(' '.join([*ww])))
+        case ['change_subtrees', *ww]:
+            return change_subtrees(parse_pattern(' '.join([*ww])))
         case ['deptrees2wordlines']:
             return deptrees2wordlines
         case ['take_trees', begin, end]:
@@ -229,6 +240,8 @@ def parse_operation(ss: list[str]) -> Operation:
             return statistics(ww)
         case ['underscore_fields', *ww]:
             return undescore_fields(ww)
+        case ['from_script', filename]:
+            return from_script(filename)
         case _:
             raise ParseError(' '.join(['operation'] + ss + ['not matched']))
 

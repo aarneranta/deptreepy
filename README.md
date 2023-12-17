@@ -18,9 +18,11 @@ The command-arg combinations are
    'match_subtrees <pattern>'
    'match_wordlines <pattern>'
    'change_wordlines <pattern>'
+   'change_subtrees <pattern>'
    'statistics <field>*'
    'take_trees <int-from> <int-to>'
    'underscore_fields <field>*'
+   'from_script <file>'
 
 The commands without <file> arguments read CoNLL-U content from std-in,
 for example, with the redirection <eng-ud.conllu.
@@ -83,7 +85,14 @@ command change_wordlines:
   <field> <strpatt> <str>
   IF <pattern> <changepattern>
 
-The command change_subtrees is forthcoming, as well as some other commands and patterns.
+The command change_subtrees admits the following patterns:
+
+  PRUNE <int>
+  IF <pattern> <changepattern>
+
+It traverses each tree recursively top-down: the next step is performed in the tree
+resulting from the previoues step.
+
 
 To visualize dependency trees, you can use the Haskell program utils/VisualizeUD.hs.
 It can be used directly on CoNLL-U input,

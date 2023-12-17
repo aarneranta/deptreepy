@@ -122,6 +122,14 @@ class Tree:
         else:
             return 1
 
+
+def prune_subtrees_below(tree: Tree, depth: int) -> Tree:
+    if depth <= 1:
+        tree.subtrees = []
+    else:
+        tree.subtrees = [prune_subtrees_below(st, depth-1) for st in tree.subtrees]
+    return tree
+    
     
 @dataclass
 class DepTree(Tree):
