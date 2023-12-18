@@ -137,6 +137,10 @@ def change_deptree(patt: Pattern, tree: DepTree) -> DepTree:
         case Pattern('FILTER_SUBTREES', [condpatt]):
             tree.subtrees = [t for t in tree.subtrees if match_deptree(condpatt, t)]
             return tree
+        case Pattern('AND', patts):
+            for patt in patts:
+                tree = change_deptree(patt, tree)
+            return tree
         case _:
             tree.root = change_wordline(patt, tree.root)
             return tree
