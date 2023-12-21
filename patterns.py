@@ -171,43 +171,5 @@ def parse_pattern(s: str) ->Pattern:
                 return tok
     return to_pattern(parse[0])
 
-        
-# example:
-# AND (DEPREL *subj) (POS V*) (FEATS *=Ind*)
-example_pattern = Pattern('AND',
-                    [Pattern('DEPREL', ['*subj']),
-                     Pattern('POS', ['V*']),
-                     Pattern('FEATS', ['*=Ind*'])])
 
-
-def match_wordlines(patt, lines):
-    for line in lines:
-        try:
-            t = read_wordline(line)
-            if match_wordline(patt, t):
-                print(t)
-        except:
-            pass
-
-        
-def match_subtrees(patt, file):
-    for deptree in conllu_file_trees(file):
-        for tree in matches_in_deptree(patt, deptree):
-            print('#', tree.sentence())
-            print(tree)  # relabel_deptree(tree))
-            print()
-
-
-# to be deprecated
-def change_line_wordlines(patt, lines):
-    for line in lines:
-        try:
-            t = read_wordline(line)
-            t = change_in_wordline(patt, t)
-            print(t)
-        except:
-            print(line.strip())
-
-
-        
         

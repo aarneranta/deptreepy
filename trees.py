@@ -1,9 +1,10 @@
 import sys
 from dataclasses import dataclass
-
+from typing import Iterable
 
 @dataclass
 class WordLine:
+    "UD wordlines with 10 named fields"
     ID: str
     FORM: str
     LEMMA: str
@@ -69,6 +70,7 @@ def read_wordlines(lines):
 
 
 def replace_by_underscores(fields, wordline):
+    "replace the values of named fields by underscores"
     ldict = wordline.as_dict()
     for field in fields:
         ldict[field] = '_'
@@ -103,6 +105,7 @@ def cosine_similarity(stats1, stats2):
 
 @dataclass
 class Tree:
+    "rose trees"
     root: object
     subtrees: list
 
@@ -124,6 +127,7 @@ class Tree:
 
 
 def prune_subtrees_below(tree: Tree, depth: int) -> Tree:
+    "leave out parts of trees below given depth, 1 means keep root only"
     if depth <= 1:
         tree.subtrees = []
     else:
@@ -133,6 +137,7 @@ def prune_subtrees_below(tree: Tree, depth: int) -> Tree:
     
 @dataclass
 class DepTree(Tree):
+    "depencency trees: rose trees with word lines as nodes"
     comments: list
     
     def __str__(self):
@@ -152,8 +157,8 @@ class DepTree(Tree):
         
 
     
-def build_deptree(ns: list) -> DepTree:
-    
+def build_deptree(ns: list[WordLine]) -> DepTree:
+    "build a dependency tree from a list of word lines"
     def build_subtree(ns, root):
         subtrees = [build_subtree(ns, n) for n in ns if n.HEAD == root.ID]
         return DepTree(root, subtrees, [])
@@ -165,8 +170,7 @@ def build_deptree(ns: list) -> DepTree:
 #            raise NotValidTree
         return dt
     except:
-        print(ns)
-        raise NotValidTree
+        raise NotValidTree(str(ns))
 
     
 def relabel_deptree(tree: DepTree) -> DepTree:
@@ -196,7 +200,8 @@ def nonprojective(tree: DepTree) -> bool:
     return len(ids) == max(ids) - min(ids)
 
     
-def echo_conllu_file(file):
+def echo_conllu_file(file: Iterable[str]):
+    "reads a stream of lines, interprets them as word lines, and prints back" 
     for line in file:
         try:
             t = read_wordline(line)
@@ -208,30 +213,6 @@ def echo_conllu_file(file):
                 print('INVALID', line)
 
 
-def conllu_file_trees(file):
-    comms = []
-    nodes = []
-    for line in file:
-        if line.startswith('#'):
-            comms.append(line.strip())
-        elif line.strip():
-            t = read_wordline(line)
-            nodes.append(t)
-        else:
-            dt = build_deptree(nodes)
-            dt.comments = comms
-            yield dt
-            comms = []
-            nodes = []
-            
-
 if __name__ == '__mainz__':
     echo_conllu_file(sys.stdin)
-
-
-if __name__ == '__main__':
-    for dt in conllu_file_trees(sys.stdin):
-        print(dt)
-        print()
-
 

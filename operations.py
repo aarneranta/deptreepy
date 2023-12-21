@@ -134,6 +134,7 @@ def wordlines2sentences(wordliness: Iterable[list[WordLine]]) -> Iterable[str]:
         yield ' '.join([word.FORM for word in wordlines])
 
 
+# operation that extracts a sentence from a dependency tree
 extract_sentences : Operation = pipe([deptrees2wordlines, wordlines2sentences])
 
 
@@ -221,11 +222,13 @@ def change_subtrees(patt: Pattern) -> Operation:
 
 
 def from_script(filename: str) -> Operation:
+    "reads an operation by parsing a file"
     with open(filename) as script:
         return parse_operation_pipe(script.read())
             
 
 def parse_operation(ss: list[str]) -> Operation:
+    "operation parser for files and command line arguments"
     match ss:
         case ['match_wordlines', *ww]:
             return match_wordlines(parse_pattern(' '.join([*ww])))
@@ -251,7 +254,8 @@ def parse_operation(ss: list[str]) -> Operation:
             raise ParseError(' '.join(['operation'] + ss + ['not matched']))
 
 
-def parse_operation_pipe(s: str) -> Operation:    
+def parse_operation_pipe(s: str) -> Operation:
+    "parsing operation pipes separated by |"
     return pipe([parse_operation(op.split()) for op in s.split('|')])
 
 
@@ -281,7 +285,8 @@ def postprocess_operation(op: Operation) -> Operation:
 # invalid_operation = pipe([conllu2wordlines, conllu2wordlines])
 
 
-def execute_pipe_on_strings(command: str, strs: Iterable[str]): 
+def execute_pipe_on_strings(command: str, strs: Iterable[str]):
+    "apply a command to a stream of strings, with pre- and postprocessing if needed"
     oper = parse_operation_pipe(command)
     oper = preprocess_operation(oper)
     oper = postprocess_operation(oper)
