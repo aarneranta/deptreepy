@@ -239,7 +239,7 @@ def parse_operation(ss: list[str]) -> Operation:
             return extract_sentences
         case ['deptrees2wordlines']:
             return deptrees2wordlines
-        case ['take_just_trees', begin, end]:
+        case ['take_trees', begin, end]:
             return take_trees(int(begin), int(end))
         case ['statistics', *ww]:
             return statistics(ww)
