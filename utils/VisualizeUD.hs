@@ -20,6 +20,7 @@ import Data.List (intersperse,nub,mapAccumL,find,groupBy,sortBy,partition)
 import Data.Ord (comparing)
 import Data.Char (isDigit)
 import Data.Maybe (fromMaybe)
+import Data.List.Split
 import Text.PrettyPrint
 import System.Environment (getArgs)
 
@@ -130,7 +131,7 @@ dep2latex d =
 
 type CoNLL = [[String]]
 parseCoNLL :: String -> CoNLL
-parseCoNLL = map words . filter ((/="#") . take 1) . lines
+parseCoNLL = map (splitOn "\t") . filter ((/="#") . take 1) . lines
 
 --conll2dep :: String -> Dep
 --conll2dep = conll2dep' . parseCoNLL
