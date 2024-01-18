@@ -19,7 +19,7 @@ import qualified Data.Map as Map
 import Data.List (intersperse,nub,mapAccumL,find,groupBy,sortBy,partition)
 import Data.Ord (comparing)
 import Data.Char (isDigit)
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe, fromJust, isJust, catMaybes)
 import Data.List.Split
 import Text.PrettyPrint
 import System.Environment (getArgs)
@@ -136,20 +136,21 @@ parseCoNLL = map (splitOn "\t") . filter ((/="#") . take 1) . lines
 --conll2dep :: String -> Dep
 --conll2dep = conll2dep' . parseCoNLL
 
-readInt :: String -> Int
-readInt s = if all isDigit s then read s else error ("not int " ++ s)
+readInt :: String -> Maybe Int
+readInt s = if all isDigit s then Just (read s) else Nothing
 
 conll2dep' :: CoNLL -> Dep
 conll2dep' ls = Dep {
     wordLength = wld 
   , tokens = toks
   , deps = dps
-  , root = head $ [readInt x-1 | x:_:_:_:_:_:"0":_ <- ls] ++ [1]
+  -- catMabyes is used to ignore decimal numbers (empty nodes) and multiword tokens (ranges)
+  , root = head $ map (\x -> x-1) (catMaybes [readInt x | x:_:_:_:_:_:"0":_ <- ls]) ++ [1]
   }
  where
    wld i = maximum (0:[charWidth * fromIntegral (length w) | w <- let (tok,(pos,feat)) = toks !! i in [tok,pos {-,feat-}]]) --- feat not shown
    toks = [(w,(c,m)) | _:w:_:c:_:m:_ <- ls]
-   dps = [((readInt y-1, readInt x-1),lab) | x:_:_:_:_:_:y:lab:_ <- ls, y /="0"]
+   dps = map (\((my,mx),lab) -> ((fromJust my - 1, fromJust mx - 1), lab)) (filter (\((my,mx),_) -> isJust my && isJust mx) [((readInt y, readInt x),lab) | x:_:_:_:_:_:y:lab:_ <- ls, y /="0"])
    --maxdist = maximum [abs (x-y) | ((x,y),_) <- dps]
 
 
