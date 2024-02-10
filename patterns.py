@@ -90,7 +90,15 @@ def match_wordlines(patt, lines):
             pass
 
             
-def matches_in_deptree(patt: Pattern, tree: DepTree) -> bool:
+def matches_of_deptree(patt: Pattern, tree: DepTree) -> list[DepTree]:
+    "return singleton list if the tree matches, otherwise empty"
+    if match_deptree(patt, tree):
+        return [tree]
+    else:
+        return []
+
+
+def matches_in_deptree(patt: Pattern, tree: DepTree) -> list[DepTree]:
     "finding all subtrees that match a pattern"
     ts = []
     if match_deptree(patt, tree):

@@ -14,22 +14,27 @@ usage:
 
 The command-arg combinations are
 
-   cosine_similarity <file> <file> <field>*
-   'match_subtrees <pattern>'
-   'match_wordlines <pattern>'
-   'change_wordlines <pattern>'
-   'change_subtrees <pattern>'
-   'statistics <field>*'
-   'take_trees <int-from> <int-to>'
-   'underscore_fields <field>*'
-   'extract_sentences'
-   'from_script <file>'
+   cosine_similarity <file> <file> <field>*  # cosine similarity of treebanks wrt <field>*
+   'match_trees <pattern>'           # match entire trees 
+   'match_subtrees <pattern>'        # match entire trees and recursively their subtrees
+   'match_wordlines <pattern>'       # match individual wordlines in all trees
+   'change_wordlines <pattern>'      # make changes in wordlines
+   'change_subtrees <pattern>'       # change subtrees recursively
+   'statistics <field>*'             # frequency-ordered statistics of <field>*
+   'count_wordlines'                 # the number of wordlines
+   'count_trees'                     # the number ot trees
+   'take_trees <int-from> <int-to>'  # selection of trees
+   'underscore_fields <field>*'      # replace values of <field>* with _
+   'extract_sentences'               # return FORM sequences as one-liners
+   'deptrees2conllu'                 # convert internal trees to CoNLLU lists of wordlines
+   'deptrees2wordlines'              # convert internal trees to a single sequence of wordlines
+   'from_script <file>'              # read commands from a file
 
 The commands without <file> arguments read CoNLL-U content from std-in,
 for example, with the redirection <eng-ud.conllu.
 These command can also be piped: for example,
 
-   python3 deptreepy.py python3 'match_wordlines DEPREL nsubj | statistics POS' <FILE.conllu
+   python3 deptreepy.py 'match_wordlines DEPREL nsubj | statistics POS' <FILE.conllu
    
 gives statistics of POS (part of speech) of words that appear as subjects (DEPREL nsubj).
    
@@ -42,23 +47,23 @@ The <field> arguments correspond to CoNLL-U word line fields from left to right:
 
 The following patterns match both wordlines and trees, depending on the command:
 
-   <field>  <strpatt>
-   HEAD_DISTANCE <inpred>
-   AND <pattern>*
-   OR  <pattern>*
-   NOT <pattern>*
+   <field>  <strpatt>      # field with its value,      example: LEMMA poli*
+   HEAD_DISTANCE <inpred>  # linear distance from head, example: HEAD_DISTANCE >1
+   AND <pattern>*          # all patterns patch
+   OR  <pattern>*          # at least one of the patterns match
+   NOT <pattern>*          # the pattern does not match
 
 When applied to trees, they match the root node of the tree.
 The following patterns match only trees:
 
-   LENGTH <intpred>
-   DEPTH <intpred>
-   TREE <pattern> <pattern>*
-   TREE_ <pattern> <pattern>*
-   SEQUENCE <pattern>*
-   SEQUENCE_ <pattern>*
-   HAS_SUBTREE <pattern>*
-   IS_NONPROJECTIVE
+   LENGTH <intpred>           # number of wordlines in the tree
+   DEPTH <intpred>            # depth of the tree
+   TREE <pattern> <pattern>*  # <pattern> matches the root, <pattern>* subtrees in sequence
+   TREE_ <pattern> <pattern>* # <pattern> matches the root, <pattern>* a subset of subtrees
+   SEQUENCE <pattern>*        # <pattern>* matches the sequence of wordlines exactly 
+   SEQUENCE_ <pattern>*       # <pattern>* matches a subset of wordlines
+   HAS_SUBTREE <pattern>*     # some immediate subtree matches this pattern
+   IS_NONPROJECTIVE           # the tree is non-projective
 
 The auxialiary concepts are:
 
@@ -73,7 +78,7 @@ matches trees that have both a head-final and a head-initial constituent: `(AND)
 of the head, because it poses no conditions on it, the first subtree comes before the head
 (has a positive distance to it) and the second one after the head (negative distance).
 
-   match_wordlines FEATS *=In*
+   match_wordlines FEATS *=In*   # some of the features has value starting In
 
 matches indicative, infinitive, inessive, and other features starting with "In".
 
@@ -83,18 +88,37 @@ actual quotes.
 In addition to search patterns, there are ones that change the trees, invoked by the
 command change_wordlines:
 
-  <field> <strpatt> <str>
-  IF <pattern> <changepattern>
-  AND <changepatterd>*
+  <field> <strpatt> <str>        # change values of <field> that match <strpatt> to <str>
+  IF <pattern> <changepattern>   # change if the wordline matches <pattern>
+  AND <changepattern>*           # perform all these changes in parallel
+
+For example.
+
+  change_wordlines AND (LEMMA the that) (FORM the that)
+
+changes definite articles to the word "that", both in the lemma and the form.
 
 The command change_subtrees admits the following patterns:
 
-  PRUNE <int>
-  IF <pattern> <changepattern>
+  PRUNE <int>                   # drop subtrees below depth <int>
+  IF <pattern> <changepattern>  # apply changes in trees that match <pattern>
 
 It traverses each tree recursively top-down: the next step is performed in the tree
 resulting from the previoues step.
 
+The command change_trees only performs the changes in entire trees.
+Examples:
+
+  change_trees PRUNE 2   # "summarization" by dropping words below depth 2
+
+To show the results of analysis or changes in plain sentences, use extract_sentences:
+
+  cat FILE.conllu | ./deptreepy.py 'change_trees PRUNE 2 | extract_sentences'
+
+To reconstruct valid CoNLLU trees (with IDs in contiguous sequence, root labelled 'root'),
+use deptrees2conllu
+
+  cat FILE.conllu | ./deptreepy.py 'change_trees PRUNE 2 | deptrees2conllu'
 
 To visualize dependency trees, you can use the Haskell program utils/VisualizeUD.hs.
 It can be used directly on CoNLL-U input,
@@ -102,12 +126,12 @@ It can be used directly on CoNLL-U input,
   cat FILE.conllu | runghc utils/VisualizeUD.hs (latex | svg)
 
 to produce either a LaTeX file or an HTML file with embedded SVG images.
-To pipe into this visualization from deptreepy, use the deptrees2wordlines operation
+To pipe into this visualization from deptreepy, use the deptrees2conllu operation
 at the end of the pipe, for instance,
 
   cat FILE.conllu |
-  python3 deptreepy.py 'match_subtrees IS_NONPROJECTIVE | deptrees2wordlines' |
-  runghc utils/VisualizeUD.hs svg
+    ./deptreepy.py 'match_subtrees IS_NONPROJECTIVE | deptrees2conllu' |
+    runghc utils/VisualizeUD.hs svg
 
 The svg option is recommended for non-latin alphabets such as Chinese, unless you have
 suitable LaTeX packages available.
