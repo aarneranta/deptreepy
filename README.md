@@ -72,6 +72,10 @@ The auxialiary concepts are:
 
 For example,
 
+   match_trees SEQUENCE_ (LEMMA politi*)
+
+matches trees that are "about politics", i.e. contain a lemma starting "politi".
+
    match_subtrees TREE (AND) (HEAD_DISTANCE >0) (HEAD_DISTANCE <0)
 
 matches trees that have both a head-final and a head-initial constituent: `(AND)` is true
