@@ -70,6 +70,9 @@ def match_deptree(patt: Pattern, tree: DepTree) ->bool:
                 return (all(any(match_wordline(p, t) for t in tree.wordlines()) for p in patts))
             case Pattern('HAS_SUBTREE', patts):
                 return any(all(match_deptree(p, st) for p in patts) for st in tree.subtrees) 
+            case Pattern('CONTAINS_SUBTREE', patts):  ## to revisit
+                return (all(match_deptree(p, tree) for p in patts) or
+                        any(match_deptree(patt, st) for st in tree.subtrees)) 
             case Pattern('AND', patts):  # must be defined again for tree patterns
                 return all(match_deptree(p, tree) for p in patts) 
             case Pattern('OR', patts):
@@ -142,7 +145,7 @@ def change_deptree(patt: Pattern, tree: DepTree) -> DepTree:
         case Pattern('PRUNE', [depth]):
             depth = int(depth)
             return prune_subtrees_below(tree, depth)
-        case Pattern('FILTER_SUBTREES', [condpatt]):
+        case Pattern('FILTER_SUBTREES', [condpatt]):  ## to revisit
             tree.subtrees = [t for t in tree.subtrees if match_deptree(condpatt, t)]
             return tree
         case Pattern('AND', patts):
