@@ -44,7 +44,7 @@ def match_wordline(patt: Pattern, word: WordLine) ->bool:
         case _:
             return False
 
-def match_deptree(patt: Pattern, tree: DepTree) ->bool:
+def match_deptree(patt: Pattern, tree: DepTree) -> bool:
     "matching entire trees - either their root wordline or the whole tree"
     if match_wordline(patt, tree.root):
         return True
@@ -83,16 +83,6 @@ def match_deptree(patt: Pattern, tree: DepTree) ->bool:
                 return False
 
 
-def match_wordlines(patt, lines):
-    for line in lines:
-        try:
-            t = read_wordline(line)
-            if match_wordline(patt, t):
-                print(t)
-        except:
-            pass
-
-            
 def matches_of_deptree(patt: Pattern, tree: DepTree) -> list[DepTree]:
     "return singleton list if the tree matches, otherwise empty"
     if match_deptree(patt, tree):

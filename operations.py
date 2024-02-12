@@ -120,7 +120,7 @@ def deptrees2conllu(trees: Iterable[DepTree]) -> Iterable[list[WordLine]]:
 
 @operation
 def deptrees2wordlines(trees: Iterable[DepTree]) -> Iterable[WordLine]:
-    "convert a stream of deptrees to a stream of relabeled lists of wordlines"
+    "convert a stream of deptrees to a stream wordlines"
     for tree in trees:
         for line in tree.wordlines():
             yield line
@@ -128,7 +128,7 @@ def deptrees2wordlines(trees: Iterable[DepTree]) -> Iterable[WordLine]:
 
 @operation
 def wordliness2conllu(stanzas: Iterable[list[WordLine]]) -> CoNLLU:
-    "convert a stream of lists of wordlines to empty-line-separated stanzas"
+    "convert a stream of lists of wordlines to relabelled empty-line-separated stanzas"
     for ws in stanzas:
         for w in ws:
             yield str(w)
