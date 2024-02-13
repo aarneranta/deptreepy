@@ -27,7 +27,7 @@ The command-arg combinations are
    'take_trees <int-from> <int-to>'  # selection of trees
    'underscore_fields <field>*'      # replace values of <field>* with _
    'extract_sentences'               # return FORM sequences as one-liners
-   'trees2conllu'                    # convert internal trees to CoNLLU lists of wordlines
+   'trees2conllu'                    # convert internal trees to CoNLLU stanzas
    'trees2wordlines'                 # convert internal trees to a single sequence of wordlines
    'from_script <file>'              # read commands from a file
 

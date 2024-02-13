@@ -194,7 +194,7 @@ def relabel_deptree(tree: DepTree) -> DepTree:
         return t
 
     r = renumber(tree)
-    r.prefix_comments(tree.comments)
+#    r.prefix_comments(tree.comments)
     return r
 
 

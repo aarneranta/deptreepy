@@ -111,11 +111,21 @@ def trees2strs(trees: Iterable[DepTree]) -> Iterable[str]:
 
 
 @operation
-def trees2conllu(trees: Iterable[DepTree]) -> Iterable[list[WordLine]]:
+def trees2wordliness(trees: Iterable[DepTree]) -> Iterable[list[WordLine]]:
     "convert a stream of deptrees to a stream of relabeled lists of wordlines"
     for tree in trees:
         tree = relabel_deptree(tree)
         yield tree.wordlines()
+
+
+@operation
+def trees2conllu(trees: Iterable[DepTree]) -> Iterable[str]:
+    "convert a stream of deptrees to a stream of relabeled lists of wordlines"
+    for tree in trees:
+        tree = relabel_deptree(tree)
+        for line in tree.comments + list(map(str, tree.wordlines())):
+            yield line
+        yield ''
 
 
 @operation
@@ -144,7 +154,7 @@ def wordlines2sentences(wordliness: Iterable[list[WordLine]]) -> Iterable[str]:
 
 
 # operation that extracts a sentence from a dependency tree
-extract_sentences : Operation = pipe([trees2conllu, wordlines2sentences])
+extract_sentences : Operation = pipe([trees2wordliness, wordlines2sentences])
 
 
 @operation
