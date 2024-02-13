@@ -18,6 +18,7 @@ The command-arg combinations are
    'match_trees <pattern>'           # match entire trees 
    'match_subtrees <pattern>'        # match entire trees and recursively their subtrees
    'match_wordlines <pattern>'       # match individual wordlines in all trees
+   'match_segments <pattern>         # match contiguous, disjoint segments of trees
    'change_wordlines <pattern>'      # make changes in wordlines
    'change_subtrees <pattern>'       # change subtrees recursively
    'statistics <field>*'             # frequency-ordered statistics of <field>*
@@ -26,8 +27,8 @@ The command-arg combinations are
    'take_trees <int-from> <int-to>'  # selection of trees
    'underscore_fields <field>*'      # replace values of <field>* with _
    'extract_sentences'               # return FORM sequences as one-liners
-   'deptrees2conllu'                 # convert internal trees to CoNLLU lists of wordlines
-   'deptrees2wordlines'              # convert internal trees to a single sequence of wordlines
+   'trees2conllu'                    # convert internal trees to CoNLLU lists of wordlines
+   'trees2wordlines'                 # convert internal trees to a single sequence of wordlines
    'from_script <file>'              # read commands from a file
 
 The commands without <file> arguments read CoNLL-U content from std-in,
@@ -89,7 +90,24 @@ matches indicative, infinitive, inessive, and other features starting with "In".
 Quotes are not used around string patterns: if used, they can only match strings with
 actual quotes.
 
-In addition to search patterns, there are ones that change the trees, invoked by the
+Segments of trees are matched currently with patterns of fixed length:
+
+   REPEAT <int> <treepattern>  # <n> contiguous trees matching <treepattern>
+   SEGMENT <treepattern>*      # contiguous trees matching <treepattern>* in the given order
+
+Examples:
+
+   match_segments REPEAT 3 (FEATS *=Past*)                                     # group of 3 past tense sentences
+   match_segments SEGMENT (AND) (HAS_SUBTREE (AND (DEPREL nsubj) (POS PRON)))  # any sentence followed by one with a pronoun subject
+
+Segments can be useful for discovering narrative structures. But notice that, for many treebanks, segments make no sense,
+because they are just bags of sentences (often for copyright reasons).
+
+The fixed-length restriction is meant to be temporary. But allowing unrestricted length (e.g. "at least 2")
+may give the power of regular expressions, which is tricky to implement. Python's regex supports only strings, not
+arbitrary sequences such as sequences of trees.
+
+In addition to search patterns, there are ones that change trees, invoked by the
 command change_wordlines:
 
   <field> <strpatt> <str>        # change values of <field> that match <strpatt> to <str>
@@ -120,9 +138,9 @@ To show the results of analysis or changes in plain sentences, use extract_sente
   cat FILE.conllu | ./deptreepy.py 'change_trees PRUNE 2 | extract_sentences'
 
 To reconstruct valid CoNLLU trees (with IDs in contiguous sequence, root labelled 'root'),
-use deptrees2conllu
+use trees2conllu
 
-  cat FILE.conllu | ./deptreepy.py 'change_trees PRUNE 2 | deptrees2conllu'
+  cat FILE.conllu | ./deptreepy.py 'change_trees PRUNE 2 | trees2conllu'
 
 To visualize dependency trees, you can use the Haskell program utils/VisualizeUD.hs.
 It can be used directly on CoNLL-U input,
@@ -130,11 +148,11 @@ It can be used directly on CoNLL-U input,
   cat FILE.conllu | runghc utils/VisualizeUD.hs (latex | svg)
 
 to produce either a LaTeX file or an HTML file with embedded SVG images.
-To pipe into this visualization from deptreepy, use the deptrees2conllu operation
+To pipe into this visualization from deptreepy, use the trees2conllu operation
 at the end of the pipe, for instance,
 
   cat FILE.conllu |
-    ./deptreepy.py 'match_subtrees IS_NONPROJECTIVE | deptrees2conllu' |
+    ./deptreepy.py 'match_subtrees IS_NONPROJECTIVE | trees2conllu' |
     runghc utils/VisualizeUD.hs svg
 
 The svg option is recommended for non-latin alphabets such as Chinese, unless you have

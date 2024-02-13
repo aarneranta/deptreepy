@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Iterable, Callable
 from fnmatch import fnmatch
 from pyparsing import nestedExpr
 from trees import *
@@ -44,6 +45,7 @@ def match_wordline(patt: Pattern, word: WordLine) ->bool:
         case _:
             return False
 
+        
 def match_deptree(patt: Pattern, tree: DepTree) -> bool:
     "matching entire trees - either their root wordline or the whole tree"
     if match_wordline(patt, tree.root):
@@ -82,7 +84,7 @@ def match_deptree(patt: Pattern, tree: DepTree) -> bool:
             case _:
                 return False
 
-
+            
 def matches_of_deptree(patt: Pattern, tree: DepTree) -> list[DepTree]:
     "return singleton list if the tree matches, otherwise empty"
     if match_deptree(patt, tree):
@@ -100,6 +102,62 @@ def matches_in_deptree(patt: Pattern, tree: DepTree) -> list[DepTree]:
         ts.extend(matches_in_deptree(patt, subtree))
     return ts
 
+
+def len_segment_pattern(patt: Pattern) -> int:
+    match patt:
+        case Pattern('SEGMENT', patts):
+            return sum(len_segment_pattern(pt) for pt in patts)
+        case Pattern('REPEAT', [n, patt]):
+            return int(n) * len_segment_pattern(patt)
+        case _:
+            return 1
+
+
+def match_segment(patt: Pattern, trees: list[DepTree]) -> bool:
+    "matching a contiguous segment of trees"
+    if len_segment_pattern(patt) == len(trees):
+        match patt:
+            case Pattern('SEGMENT', patts):
+                for pt in patts:
+                    if match_segment(pt, trees[:len_segment_pattern(pt)]):
+                        trees = trees[len_segment_pattern(pt):]
+                        continue
+                    else:
+                        return False
+                return True
+            case Pattern('REPEAT', [n, pt]):
+                for _ in range(int(n)):
+                    if match_segment(pt, trees[:len_segment_pattern(pt)]):
+                        trees = trees[len_segment_pattern(pt):]
+                        continue
+                    else:
+                        return False
+                return True
+            case _:
+                return match_deptree(patt, trees[0])  # must be a singleton
+
+        
+def matches_in_tree_stream(patt: Pattern,
+                           trees: Iterable[DepTree]) -> Iterable[list[DepTree]]:
+    lenp = len_segment_pattern(patt)
+    try:
+        segment = [next(trees) for _ in range(lenp)]
+    except StopIteration:
+        return
+    while trees:
+        if match_segment(patt, segment):
+            yield segment
+            try:
+                segment = [next(trees) for _ in range(lenp)]  # segments may not overlap
+            except StopIteration:
+                return
+        else:
+            try:
+                segment.pop(0)
+                segment.append(next(trees))
+            except StopIteration:
+                return
+        
 
 def change_wordline(patt: Pattern, word: WordLine) ->WordLine:
     "changing the value of some field in accordance with a pattern"

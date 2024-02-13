@@ -78,7 +78,7 @@ def conllu2wordlines(lines: CoNLLU) -> Iterable[WordLine]:
 
 
 @operation
-def conllu2deptrees(lines: CoNLLU) -> Iterable[DepTree]:
+def conllu2trees(lines: CoNLLU) -> Iterable[DepTree]:
     "convert a list of lines into a deptree"
     comms = []
     nodes = []
@@ -103,7 +103,7 @@ def wordlines2strs(lines: Iterable[WordLine]) -> Iterable[str]:
 
         
 @operation
-def deptrees2strs(trees: Iterable[DepTree]) -> Iterable[str]:
+def trees2strs(trees: Iterable[DepTree]) -> Iterable[str]:
     "convert wordlines to tab-separated strings line by line"
     for tree in trees:
         yield str(tree)
@@ -111,7 +111,7 @@ def deptrees2strs(trees: Iterable[DepTree]) -> Iterable[str]:
 
 
 @operation
-def deptrees2conllu(trees: Iterable[DepTree]) -> Iterable[list[WordLine]]:
+def trees2conllu(trees: Iterable[DepTree]) -> Iterable[list[WordLine]]:
     "convert a stream of deptrees to a stream of relabeled lists of wordlines"
     for tree in trees:
         tree = relabel_deptree(tree)
@@ -119,7 +119,7 @@ def deptrees2conllu(trees: Iterable[DepTree]) -> Iterable[list[WordLine]]:
 
 
 @operation
-def deptrees2wordlines(trees: Iterable[DepTree]) -> Iterable[WordLine]:
+def trees2wordlines(trees: Iterable[DepTree]) -> Iterable[WordLine]:
     "convert a stream of deptrees to a stream wordlines"
     for tree in trees:
         for line in tree.wordlines():
@@ -130,6 +130,7 @@ def deptrees2wordlines(trees: Iterable[DepTree]) -> Iterable[WordLine]:
 def wordliness2conllu(stanzas: Iterable[list[WordLine]]) -> CoNLLU:
     "convert a stream of lists of wordlines to relabelled empty-line-separated stanzas"
     for ws in stanzas:
+        yield '# ' + ' '.join([w.FORM for w in ws])
         for w in ws:
             yield str(w)
         yield ''
@@ -143,7 +144,7 @@ def wordlines2sentences(wordliness: Iterable[list[WordLine]]) -> Iterable[str]:
 
 
 # operation that extracts a sentence from a dependency tree
-extract_sentences : Operation = pipe([deptrees2conllu, wordlines2sentences])
+extract_sentences : Operation = pipe([trees2conllu, wordlines2sentences])
 
 
 @operation
@@ -245,6 +246,22 @@ def match_subtrees(patt: Pattern) -> Operation:
         )
 
 
+def match_segments(patt: Pattern) -> Operation:
+    def matcht(ts):
+        for segm in matches_in_tree_stream(patt, ts):
+            segm[0].prefix_comments(['# BEGIN SEGMENT length ' + str(len(segm))])
+            segm[-1].prefix_comments(['# END SEGMENT'])
+            for tree in segm:
+                yield tree
+    return Operation(
+        matcht,
+        Iterable[DepTree],
+        Iterable[DepTree],
+        'match_segments',
+        'pattern matching contiguous segments, marking the ones that match'
+        )
+        
+
 def change_wordlines(patt: Pattern) -> Operation:
     return Operation (
         lambda ws: (change_wordline(patt, w) for w in ws),
@@ -294,6 +311,8 @@ def parse_operation(ss: list[str]) -> Operation:
             return match_subtrees(parse_pattern(' '.join([*ww])))
         case ['match_trees', *ww]:
             return match_trees(parse_pattern(' '.join([*ww])))
+        case ['match_segments', *ww]:
+            return match_segments(parse_pattern(' '.join([*ww])))
         case ['change_wordlines', *ww]:
             return change_wordlines(parse_pattern(' '.join([*ww])))
         case ['change_trees', *ww]:
@@ -302,10 +321,10 @@ def parse_operation(ss: list[str]) -> Operation:
             return change_subtrees(parse_pattern(' '.join([*ww])))
         case ['extract_sentences']:
             return extract_sentences
-        case ['deptrees2conllu']:
-            return deptrees2conllu
-        case ['deptrees2wordlines']:
-            return deptrees2wordlines
+        case ['trees2conllu']:
+            return trees2conllu
+        case ['trees2wordlines']:
+            return trees2wordlines
         case ['take_trees', begin, end]:
             return take_trees(int(begin), int(end))
         case ['statistics', *ww]:
@@ -328,7 +347,7 @@ def preprocess_operation(op: Operation) -> Operation:
     if op.argtype == Iterable[WordLine]:
         return pipe([conllu2wordlines, op])
     elif op.argtype == Iterable[DepTree]:
-        return pipe([conllu2deptrees, op])
+        return pipe([conllu2trees, op])
     else:
         return op
 
@@ -338,7 +357,7 @@ def postprocess_operation(op: Operation) -> Operation:
     if op.valtype == Iterable[WordLine]:
         return pipe([op, wordlines2strs])
     elif op.valtype == Iterable[DepTree]:
-        return pipe([op, deptrees2strs])
+        return pipe([op, trees2strs])
     elif op.valtype == Iterable[list[WordLine]]:
         return pipe([op, wordliness2conllu]) 
     else:

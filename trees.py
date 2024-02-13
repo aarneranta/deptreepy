@@ -154,6 +154,9 @@ class DepTree(Tree):
 
     def sentence(self):
         return ' '.join([word.FORM for word in self.wordlines()])
+
+    def prefix_comments(self, ss):
+        self.comments = ss + self.comments
         
 
     
