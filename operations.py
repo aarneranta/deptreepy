@@ -249,8 +249,8 @@ def match_subtrees(patt: Pattern) -> Operation:
 def match_segments(patt: Pattern) -> Operation:
     def matcht(ts):
         for segm in matches_in_tree_stream(patt, ts):
-            segm[0].prefix_comments(['# BEGIN SEGMENT length ' + str(len(segm))])
-            segm[-1].prefix_comments(['# END SEGMENT'])
+            segm[0].prefix_comments(['# FIRST IN SEGMENT length ' + str(len(segm))])
+            segm[-1].prefix_comments(['# LAST IN SEGMENT'])
             for tree in segm:
                 yield tree
     return Operation(

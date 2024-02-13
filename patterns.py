@@ -139,24 +139,46 @@ def match_segment(patt: Pattern, trees: list[DepTree]) -> bool:
         
 def matches_in_tree_stream(patt: Pattern,
                            trees: Iterable[DepTree]) -> Iterable[list[DepTree]]:
-    lenp = len_segment_pattern(patt)
-    try:
-        segment = [next(trees) for _ in range(lenp)]
-    except StopIteration:
-        return
-    while trees:
-        if match_segment(patt, segment):
-            yield segment
+    match patt:
+        case Pattern('REPEAT', [n, pt]) if n[0] == '>':
+            segment = []
+            while trees:
+                try:
+                    tr = next(trees)
+                except StopIteration:
+                    break
+                while match_deptree(pt, tr):
+                    segment.append(tr)
+                    if trees:
+                        try:
+                            tr = next(trees)
+                        except StopIteration:
+                            break
+                    else:
+                        break
+                if len(segment) > int(n[1:]):
+                    yield segment
+                segment = []
+            
+        case _:
+            lenp = len_segment_pattern(patt)
             try:
-                segment = [next(trees) for _ in range(lenp)]  # segments may not overlap
+                segment = [next(trees) for _ in range(lenp)]
             except StopIteration:
                 return
-        else:
-            try:
-                segment.pop(0)
-                segment.append(next(trees))
-            except StopIteration:
-                return
+            while trees:
+                if match_segment(patt, segment):
+                    yield segment
+                    try:
+                        segment = [next(trees) for _ in range(lenp)]  # segments may not overlap
+                    except StopIteration:
+                        return
+                else:
+                    try:
+                        segment.pop(0)
+                        segment.append(next(trees))
+                    except StopIteration:
+                        return
         
 
 def change_wordline(patt: Pattern, word: WordLine) ->WordLine:

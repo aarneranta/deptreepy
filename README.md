@@ -90,22 +90,18 @@ matches indicative, infinitive, inessive, and other features starting with "In".
 Quotes are not used around string patterns: if used, they can only match strings with
 actual quotes.
 
-Segments of trees are matched currently with patterns of fixed length:
+Segments of trees are matched currently with the following patterns:
 
-   REPEAT <int> <treepattern>  # <n> contiguous trees matching <treepattern>
+   REPEAT >?<int> <treepattern>  # <n> contiguous trees matching <treepattern>
    SEGMENT <treepattern>*      # contiguous trees matching <treepattern>* in the given order
 
 Examples:
 
-   match_segments REPEAT 3 (FEATS *=Past*)                                     # group of 3 past tense sentences
+   match_segments REPEAT >3 (FEATS *=Past*)    # group of more than 3 past tense sentences
    match_segments SEGMENT (AND) (HAS_SUBTREE (AND (DEPREL nsubj) (POS PRON)))  # any sentence followed by one with a pronoun subject
 
 Segments can be useful for discovering narrative structures. But notice that, for many treebanks, segments make no sense,
 because they are just bags of sentences (often for copyright reasons).
-
-The fixed-length restriction is meant to be temporary. But allowing unrestricted length (e.g. "at least 2")
-may give the power of regular expressions, which is tricky to implement. Python's regex supports only strings, not
-arbitrary sequences such as sequences of trees.
 
 In addition to search patterns, there are ones that change trees, invoked by the
 command change_wordlines:
