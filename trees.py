@@ -193,7 +193,9 @@ def relabel_deptree(tree: DepTree) -> DepTree:
             renumber(st)
         return t
 
-    return renumber(tree)
+    r = renumber(tree)
+    r.prefix_comments(tree.comments)
+    return r
 
 
 def nonprojective(tree: DepTree) -> bool:
