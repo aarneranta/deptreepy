@@ -2,91 +2,74 @@ import sys
 from argparse import ArgumentParser, ArgumentTypeError
 from itertools import chain, repeat, islice
 
+import drawsvg as draw
+
 from trees import read_wordlines
 
-VSPACE = "\\vspace{4mm}"
+# measures
+SPACE_LEN = 10
+DEFAULT_WORD_LEN = 20
+CHAR_LEN = 1.8
 
-def intersperse(delimiter, seq):
-  return islice(chain.from_iterable(zip(repeat(delimiter), seq)), 1, None)
-
-# stores CoNLL-U sentence info to be visualized
+# stores CoNLL-U sentence info to be visualized (corresponds to Haskell's Dep)
 # NOTE: all positions are real positions and not token IDs, hence the -1s
-class Dep:
-  def __init__(self,wordlines):
-      # dictionary (token position -> word form length)
-      self.word_length = {
-        i: len(wl.FORM) for (i,wl) in enumerate(wordlines)
-      }
+class VisualStanza:
+  def __init__(self,stanza):
+    ls = stanza.split("\n")
 
-      # essential info about each token (word form, UPOS tag)
-      self.tokens = [(wl.FORM, wl.POS) for wl in wordlines] 
+    # parse stanza as list of wordlines, but ignore tokens whose ID is not 
+    # an int (floats & ranges)
+    wls = [wl for wl in read_wordlines(ls) if wl.ID.isdigit()]
+
+    # dictionary {token position: word token length}
+    # the "token length" is based on the longest between POS and FORM
+    self.token_lens = {
+      i: CHAR_LEN * max(0, len(wl.FORM), len(wl.POS)) 
+      for (i,wl) in enumerate(wls)
+    }
+
+    # list of word forms paired with their POS tag: [(word form, UPOS tag)]
+    self.tokens = [(wl.FORM, wl.POS) for wl in wls] 
       
-      # dependency relations: ((from,to), label)
-      self.deps = [
-        ((int(wl.ID) - 1, int(wl.HEAD) - 1), wl.DEPREL) for wl in wordlines
-        ]
+    # list of dependency relations: [((from,to), label)]
+    self.deprels = [
+      ((int(wl.ID) - 1, int(wl.HEAD) - 1), wl.DEPREL) for wl in wls
+      ]
 
-      # root word positions
-      self.root = int([wl.ID for wl in wordlines if wl.HEAD == "0"][0]) - 1
+    # root word position
+    self.root = int([wl.ID for wl in wls if wl.HEAD == "0"][0]) - 1
+  
+  def word_width(self, i): 
+    return 100 * (self.token_lens[i] / DEFAULT_WORD_LEN) + SPACE_LEN
+  
+  def arcs(self):
+    return [(min(f,t), max(f,t)) for ((f,t),_) in self.deprels]
+  
+  # depth of the link from f to t
+  def depth(self,f,t):
+    # projective arcs "under" (f,t)?
+    sub_arcs = [(x,y) for (x,y) in self.arcs() 
+                if (f < x and y <= t) or (f == x and y < t)]
 
+    if sub_arcs:
+      return 1 + max([0] + [self.depth(x,y) for (x,y) in sub_arcs])
+    return 0
 
-# LaTeX stuff
-
-# convert CoNNL-U sentence into LaTeX figure
-def conllu2latex(stanza):
-  wls = []
-  for wl in read_wordlines(stanza.split("\n")):
-    if wl.ID.isdigit(): # ignore all the stupid floating point and range IDs
-      wls.append(wl)
-  dep = Dep(wls)
-  print(dep.word_length, dep.tokens, dep.deps, dep.root)
-  # TODO: convert it to a picture (either intermediate rep or LaTeX code directly)
-  return "there will be a tree here"
-
-# embed LaTeX figure in a LaTeX document
-def embed_in_latex(latex_tree):
-  return "\n".join([
-    "\\documentclass{article}",
-    "\\usepackage[a4paper,margin=0.5in,landscape]{geometry}",
-    "\\usepackage[utf8]{inputenc}",
-    "\\begin{document}",
-    latex_tree,
-    "\\end{document}"
-  ])
-
-# convert CoNNL-U string into a list of LaTeX figures
-def conllus2latex_doc(stanzas):
-  latex_trees = [conllu2latex(stanza) for stanza in stanzas]
-  return embed_in_latex("\n".join(intersperse(VSPACE, latex_trees)))
-
-
-# SVG + HTML stuff
-
-# convert CoNNL-U sentence into SVG figure
-def conllu2svg(stanza):
-  pass
-
-# embed SVG figure in an HTML document
-def embed_in_html(svg_tree):
-  pass
-
-# convert CoNNL-U string into a list of LaTeX figures
-def conllus2svg_doc(stanzas):
-  pass
-
+  # abs height of the arc between nodes with positions f (from) and t (to)?
+  def arc_height(self, f, t):
+    return self.depth(min(f,t), max(f,t)) + 1
+  
+  def to_svg(self):
+    words_width = sum([self.word_width(i) for i in range(len(self.tokens))])
+    spaces_width = SPACE_LEN * (len(self.tokens) - 1)
+    w = words_width + spaces_width
+    h = 50 + 20 * max([0] + [self.arc_height(f,t) for (f,t) in self.arcs()])
+    print(w,h)
 
 if __name__ == "__main__":
   intxt = sys.stdin.read()
   stanzas = [span for span in intxt.split("\n\n") if span.strip()]
-
-  argparser = ArgumentParser()
-  argparser.add_argument("target", help="latex | svg")
-  args = argparser.parse_args()
-  tgt = args.target
-  if tgt == "latex":
-    print(conllus2latex_doc(stanzas))
-  elif tgt == "svg":
-    print(conllus2svg_doc(stanzas))
-  else:
-    raise ArgumentTypeError("usage: python visualize_ud.py (latex | svg)")
-    
+  
+  # WIP
+  vs = VisualStanza(stanzas[0])
+  vs.to_svg() 
