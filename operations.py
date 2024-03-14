@@ -78,7 +78,7 @@ def conllu2wordlines(lines: CoNLLU) -> Iterable[WordLine]:
 
 
 @operation
-def conllu2deptrees(lines: CoNLLU) -> Iterable[DepTree]:
+def conllu2trees(lines: CoNLLU) -> Iterable[DepTree]:
     "convert a list of lines into a deptree"
     comms = []
     nodes = []
@@ -103,7 +103,7 @@ def wordlines2strs(lines: Iterable[WordLine]) -> Iterable[str]:
 
         
 @operation
-def deptrees2strs(trees: Iterable[DepTree]) -> Iterable[str]:
+def trees2strs(trees: Iterable[DepTree]) -> Iterable[str]:
     "convert wordlines to tab-separated strings line by line"
     for tree in trees:
         yield str(tree)
@@ -111,7 +111,7 @@ def deptrees2strs(trees: Iterable[DepTree]) -> Iterable[str]:
 
 
 @operation
-def deptrees2wordlines(trees: Iterable[DepTree]) -> Iterable[list[WordLine]]:
+def trees2wordliness(trees: Iterable[DepTree]) -> Iterable[list[WordLine]]:
     "convert a stream of deptrees to a stream of relabeled lists of wordlines"
     for tree in trees:
         tree = relabel_deptree(tree)
@@ -119,9 +119,28 @@ def deptrees2wordlines(trees: Iterable[DepTree]) -> Iterable[list[WordLine]]:
 
 
 @operation
+def trees2conllu(trees: Iterable[DepTree]) -> Iterable[str]:
+    "convert a stream of deptrees to a stream of relabeled lists of wordlines"
+    for tree in trees:
+        tree = relabel_deptree(tree)
+        for line in tree.comments + list(map(str, tree.wordlines())):
+            yield line
+        yield ''
+
+
+@operation
+def trees2wordlines(trees: Iterable[DepTree]) -> Iterable[WordLine]:
+    "convert a stream of deptrees to a stream wordlines"
+    for tree in trees:
+        for line in tree.wordlines():
+            yield line
+
+
+@operation
 def wordliness2conllu(stanzas: Iterable[list[WordLine]]) -> CoNLLU:
-    "convert a stream of lists of wordlines to empty-line-separated stanzas"
+    "convert a stream of lists of wordlines to relabelled empty-line-separated stanzas"
     for ws in stanzas:
+        yield '# ' + ' '.join([w.FORM for w in ws])
         for w in ws:
             yield str(w)
         yield ''
@@ -135,7 +154,7 @@ def wordlines2sentences(wordliness: Iterable[list[WordLine]]) -> Iterable[str]:
 
 
 # operation that extracts a sentence from a dependency tree
-extract_sentences : Operation = pipe([deptrees2wordlines, wordlines2sentences])
+extract_sentences : Operation = pipe([trees2wordliness, wordlines2sentences])
 
 
 @operation
@@ -175,6 +194,26 @@ def statistics(fields: list[str]) -> Operation:
         )
 
 
+def count_wordlines() -> Operation:
+    return Operation (
+        lambda ws: [len(list(ws))],
+        Iterable[WordLine],
+        list[int],
+        'count_wordlines',
+        "return the number of wordlines"
+        )
+
+
+def count_trees() -> Operation:
+    return Operation (
+        lambda ws: [len(list(ws))],
+        Iterable[DepTree],
+        list[int],
+        'count_trees',
+        "return the number of trees"
+        )
+
+
 def match_wordlines(patt: Pattern) -> Operation:
     return Operation (
         lambda ws: (w for w in ws if match_wordline(patt, w)),
@@ -184,6 +223,22 @@ def match_wordlines(patt: Pattern) -> Operation:
         'pattern matching with wordlines, yielding the ones that match'
         )
         
+
+def match_trees(patt: Pattern) -> Operation:
+
+    def matcht(ts):
+        for tr in ts:
+            for t in matches_of_deptree(patt, tr):
+                yield t
+                
+    return Operation (
+        matcht,
+        Iterable[DepTree],
+        Iterable[DepTree],
+        'match_trees',
+        'pattern matching with entire trees, yielding the ones that match'
+        )
+
 
 def match_subtrees(patt: Pattern) -> Operation:
 
@@ -201,6 +256,22 @@ def match_subtrees(patt: Pattern) -> Operation:
         )
 
 
+def match_segments(patt: Pattern) -> Operation:
+    def matcht(ts):
+        for segm in matches_in_tree_stream(patt, ts):
+            segm[0].prefix_comments(['# FIRST IN SEGMENT length ' + str(len(segm))])
+            segm[-1].prefix_comments(['# LAST IN SEGMENT'])
+            for tree in segm:
+                yield tree
+    return Operation(
+        matcht,
+        Iterable[DepTree],
+        Iterable[DepTree],
+        'match_segments',
+        'pattern matching contiguous segments, marking the ones that match'
+        )
+        
+
 def change_wordlines(patt: Pattern) -> Operation:
     return Operation (
         lambda ws: (change_wordline(patt, w) for w in ws),
@@ -209,6 +280,16 @@ def change_wordlines(patt: Pattern) -> Operation:
         'change_wordlines',
         'pattern-based changes in wordlines'
         )    
+
+
+def change_trees(patt: Pattern) -> Operation:
+    return Operation (
+        lambda ws: (change_deptree(patt, w) for w in ws),
+        Iterable[DepTree],
+        Iterable[DepTree],
+        'change_subtrees',
+        'pattern-based changes in trees (no recursion to subtrees)'
+        )
 
 
 def change_subtrees(patt: Pattern) -> Operation:
@@ -230,18 +311,30 @@ def from_script(filename: str) -> Operation:
 def parse_operation(ss: list[str]) -> Operation:
     "operation parser for files and command line arguments"
     match ss:
+        case ['count_wordlines', *ww]:
+            return count_wordlines()
+        case ['count_trees', *ww]:
+            return count_trees()
         case ['match_wordlines', *ww]:
             return match_wordlines(parse_pattern(' '.join([*ww])))
         case ['match_subtrees', *ww]:
             return match_subtrees(parse_pattern(' '.join([*ww])))
+        case ['match_trees', *ww]:
+            return match_trees(parse_pattern(' '.join([*ww])))
+        case ['match_segments', *ww]:
+            return match_segments(parse_pattern(' '.join([*ww])))
         case ['change_wordlines', *ww]:
             return change_wordlines(parse_pattern(' '.join([*ww])))
+        case ['change_trees', *ww]:
+            return change_trees(parse_pattern(' '.join([*ww])))
         case ['change_subtrees', *ww]:
             return change_subtrees(parse_pattern(' '.join([*ww])))
         case ['extract_sentences']:
             return extract_sentences
-        case ['deptrees2wordlines']:
-            return deptrees2wordlines
+        case ['trees2conllu']:
+            return trees2conllu
+        case ['trees2wordlines']:
+            return trees2wordlines
         case ['take_trees', begin, end]:
             return take_trees(int(begin), int(end))
         case ['statistics', *ww]:
@@ -264,7 +357,7 @@ def preprocess_operation(op: Operation) -> Operation:
     if op.argtype == Iterable[WordLine]:
         return pipe([conllu2wordlines, op])
     elif op.argtype == Iterable[DepTree]:
-        return pipe([conllu2deptrees, op])
+        return pipe([conllu2trees, op])
     else:
         return op
 
@@ -274,7 +367,7 @@ def postprocess_operation(op: Operation) -> Operation:
     if op.valtype == Iterable[WordLine]:
         return pipe([op, wordlines2strs])
     elif op.valtype == Iterable[DepTree]:
-        return pipe([op, deptrees2strs])
+        return pipe([op, trees2strs])
     elif op.valtype == Iterable[list[WordLine]]:
         return pipe([op, wordliness2conllu]) 
     else:

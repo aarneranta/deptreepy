@@ -154,6 +154,9 @@ class DepTree(Tree):
 
     def sentence(self):
         return ' '.join([word.FORM for word in self.wordlines()])
+
+    def prefix_comments(self, ss):
+        self.comments = ss + self.comments
         
 
     
@@ -190,7 +193,9 @@ def relabel_deptree(tree: DepTree) -> DepTree:
             renumber(st)
         return t
 
-    return renumber(tree)
+    r = renumber(tree)
+#    r.prefix_comments(tree.comments)
+    return r
 
 
 def nonprojective(tree: DepTree) -> bool:
