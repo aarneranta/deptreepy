@@ -7,10 +7,11 @@ from drawsvg import *
 from trees import read_wordlines
 
 # default measures
-SPACE_LEN = 10
+SPACE_LEN = 15
 DEFAULT_WORD_LEN = 20
 CHAR_LEN = 1.8
-FONT_SIZE = 16
+NORMAL_TEXT_SIZE = 16
+TINY_TEXT_SIZE = 10
 SCALE = 5
 
 # stores CoNLL-U sentence info to be visualized (corresponds to Haskell's Dep)
@@ -75,11 +76,12 @@ class VisualStanza:
     h = 50 + 20 * max([0] + [self.arc_height(f,t) for (f,t) in self.arcs()])
     svg = Drawing(w,h, origin=(0,0)) # might still need to alter w and h
     
-    # draw words (WIP)
+    # draw tokens
     for (i,token) in enumerate(self.tokens):
       x = self.word_xpos(i)
-      y = 100
-      svg.append(Text(token["form"], FONT_SIZE, x=x, y=y))
+      y = h
+      svg.append(Text(token["form"], NORMAL_TEXT_SIZE, x=x, y=y))
+      svg.append(Text(token["pos"], TINY_TEXT_SIZE, x=x, y=h-15))
     svg.save_html("example.html")
 
 
