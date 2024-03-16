@@ -7,7 +7,7 @@ from drawsvg import *
 from trees import read_wordlines
 
 # default measures
-SPACE_LEN = 10
+SPACE_LEN = 15
 DEFAULT_WORD_LEN = 20
 CHAR_LEN = 1.8
 NORMAL_TEXT_SIZE = 16
@@ -29,10 +29,9 @@ class VisualStanza:
     self.tokens = [({"form": wl.FORM, "pos": wl.POS}) for wl in wordlines] 
       
     # list of dependency relations: [((from,to), label)]
-    # note: might have to remove root from here to match Haskell program
     self.deprels = [
       ((int(wl.ID) - 1, int(wl.HEAD) - 1), wl.DEPREL) for wl in wordlines
-      ]
+      if int(wl.HEAD)]
 
     # root word position
     self.root = int([wl.ID for wl in wordlines if wl.HEAD == "0"][0]) - 1
@@ -95,7 +94,7 @@ class VisualStanza:
       w = dxy - (600 * 0.5) / dxy
       h = ndxy / (3 * 0.5)
       r = h / 2
-      x = self.word_xpos(min(src,trg)) + (dxy / 2) + (20 if x < y else 10) # some centering magic
+      x = self.word_xpos(min(src,trg)) + (dxy / 2) + (20 if trg < src else 10) # some centering magic
       y = ARC_BASE_YPOS
       ycorrect = lambda y: (round(tot_h)) - round(y)
       x1 = x - w / 2
@@ -104,13 +103,26 @@ class VisualStanza:
       x3 = max(x, (x4 - r))
       y1 = ycorrect(y)
       y2 = ycorrect(y + r)
-      path = Path(stroke='black', fill='none')
-      path.M(x1, y1)
-      path.Q(x1, y2, x2, y2)
-      path.L(x3,y2)
-      path.Q(x4, y2, x4, y1)
-      svg.append(path)
-      print(x1,y1) # TODO: rm
+
+      # draw arc
+      arc_path = Path(stroke='black', fill='none')
+      arc_path.M(x1, y1)
+      arc_path.Q(x1, y2, x2, y2)
+      arc_path.L(x3,y2)
+      arc_path.Q(x4, y2, x4, y1)
+      svg.append(arc_path)
+
+      # draw arrow
+      x_arr = x + (w / 2) if trg < src else x - (w / 2)
+      y_arr = ycorrect(y - 5)
+      arrow = Lines(x_arr, y_arr, x_arr - 3, y_arr - 6, x_arr + 3, y_arr - 6, stroke='black', fill='black', close="true")
+      svg.append(arrow)
+
+      # draw label
+      x_lab = x - (len(label) * 4.5 / 2)
+      y_lab = ycorrect((h / 2) + ARC_BASE_YPOS + 3)
+      svg.append(Text(label, TINY_TEXT_SIZE, x=x_lab, y=y_lab))
+
     svg.save_html("example.html")
 
 
