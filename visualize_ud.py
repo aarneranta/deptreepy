@@ -115,7 +115,7 @@ class VisualStanza:
       # draw arrow
       x_arr = x + (w / 2) if trg < src else x - (w / 2)
       y_arr = ycorrect(y - 5)
-      arrow = Lines(x_arr, y_arr, x_arr - 3, y_arr - 6, x_arr + 3, y_arr - 6, stroke='black', fill='black', close="true")
+      arrow = Lines(x_arr, y_arr, x_arr - 3, y_arr - 6, x_arr + 3, y_arr - 6, stroke="black", fill="black", close="true")
       svg.append(arrow)
 
       # draw label
@@ -123,13 +123,25 @@ class VisualStanza:
       y_lab = ycorrect((h / 2) + ARC_BASE_YPOS + 3)
       svg.append(Text(label, TINY_TEXT_SIZE, x=x_lab, y=y_lab))
 
-    svg.save_html("example.html")
+    # draw root arrow & text
+    x_root_line = self.word_xpos(self.root) + 15
+    y_root_line = ycorrect(tot_h)
+    x_root_len = tot_h - ARC_BASE_YPOS
+    root_line = Line(x_root_line, y_root_line, x_root_line, y_root_line + x_root_len, stroke="black")
+    svg.append(root_line)
+    arrow_endpoint = y_root_line + x_root_len
+    root_arrow = Lines(x_root_line, arrow_endpoint, x_root_line - 3, arrow_endpoint - 6, x_root_line + 3, arrow_endpoint - 6, stroke="black", fill="black", close="true")
+    svg.append(root_arrow)
+    svg.append(Text("root", TINY_TEXT_SIZE, x=x_root_line + 5, y=ycorrect(tot_h - 10)))
 
+    return svg
 
 if __name__ == "__main__":
   intxt = sys.stdin.read()
   stanzas = [span for span in intxt.split("\n\n") if span.strip()]
   
-  # WIP
-  vs = VisualStanza(stanzas[0])
-  vs.to_svg() 
+  print('<html>\n<body>\n')
+  for stanza in stanzas:
+    svg = VisualStanza(stanza).to_svg()
+    sys.stdout.write(svg.as_svg())
+  print('</body>\n</html>')
