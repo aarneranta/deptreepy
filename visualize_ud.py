@@ -76,7 +76,7 @@ class VisualStanza:
 
     # picture dimensions 
     tot_w = tokens_w + spaces_w
-    tot_h = 50 + 20 * max([0] + [self.arc_height(src,trg) 
+    tot_h = 55 + 20 * max([0] + [self.arc_height(src,trg) 
                                  for (src,trg) in self.arcs()])
     
     svg = Drawing(tot_w,tot_h, origin=(0,0))
@@ -84,14 +84,14 @@ class VisualStanza:
     # draw tokens (forms + pos tags)
     for (i,token) in enumerate(self.tokens):
       x = self.token_xpos(i)
-      y = tot_h
+      y = tot_h - 5
       svg.append(Text(token["form"], NORMAL_TEXT_SIZE, x=x, y=y))
-      svg.append(Text(token["pos"], TINY_TEXT_SIZE, x=x, y=tot_h-15))
+      svg.append(Text(token["pos"], TINY_TEXT_SIZE, x=x, y=tot_h-20))
 
     # draw deprels (arcs + labels)
     for ((src,trg),label) in self.deprels:
       # otherwise everything will be mirrored
-      ycorrect = lambda y: (round(tot_h)) - round(y)
+      ycorrect = lambda y: (round(tot_h)) - round(y) - 5
       
       dxy = self.token_dist(src, trg)
       ndxy = 100 * 0.5 * self.arc_height(src,trg)
@@ -146,7 +146,7 @@ class VisualStanza:
     svg.append(Text(
       "root", 
       TINY_TEXT_SIZE, 
-      x=x_root_line + 5, y=ycorrect(tot_h - 10)))
+      x=x_root_line + 5, y=ycorrect(tot_h - 15)))
 
     return svg
 
