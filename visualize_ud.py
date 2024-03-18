@@ -15,88 +15,91 @@ TINY_TEXT_SIZE = 10
 SCALE = 5
 ARC_BASE_YPOS = 30
 
-# stores CoNLL-U sentence info to be visualized (corresponds to Haskell's Dep)
-# NOTE: all positions are real positions and not token IDs, hence the -1s
 class VisualStanza:
+  """class to visualize a CoNNL-U stanza; partly corresponding to Dep in the
+  Haskell implementation. 
+  NOTE: unlike token IDs, positions are counted from 0, hence the -1s"""
   def __init__(self,stanza):
-    lines = stanza.split("\n")
+    wordlines = [wl for wl in read_wordlines(stanza.split("\n")) 
+                 if wl.ID.isdigit()] # ignore tokens whose ID is not an int
 
-    # parse stanza as list of wordlines, but ignore tokens whose ID is not 
-    # an int (floats & ranges)
-    wordlines = [wl for wl in read_wordlines(lines) if wl.ID.isdigit()]
-
-    # list of word tokens (dicts with a form and a pos)
+    # token-wise info to be visualized (form + pos), cf. Dep's tokens
     self.tokens = [({"form": wl.FORM, "pos": wl.POS}) for wl in wordlines] 
       
-    # list of dependency relations: [((from,to), label)]
+    # list of dependency relations: [((from,to), label)], cf. Dep's deps
     self.deprels = [
       ((int(wl.ID) - 1, int(wl.HEAD) - 1), wl.DEPREL) for wl in wordlines
-      if int(wl.HEAD)]
+      if int(wl.HEAD)] # 
 
-    # root word position
+    # root position, cf. Dep's root
     self.root = int([wl.ID for wl in wordlines if wl.HEAD == "0"][0]) - 1
   
-  def word_length(self, i): # cf. wordLength
-    return CHAR_LEN * max(
+  def token_width(self, i):
+    """total i-th token width (including space) in the output SVG"""
+    abs_token_len = CHAR_LEN * max( # cf. Dep's wordLength
       0, 
       len(self.tokens[i]["form"]), 
       len(self.tokens[i]["pos"]))
-  
-  def relative_word_length(self, i): # cf. rwld
-    return self.word_length(i) / DEFAULT_WORD_LEN
+    rel_token_len = abs_token_len / DEFAULT_WORD_LEN # cf. rwdl
+    return 100 * rel_token_len + SPACE_LEN
 
-  def word_size(self, i): # cf. wsize
-    return 100 * self.relative_word_length(i) + SPACE_LEN
+  def token_xpos(self, i): 
+    """start x coordinate of i-th token, cf. wpos"""
+    return sum([self.token_width(j) for j in range(i)])
   
-  # start x coordinate of i-th word, cf. wpos
-  def word_xpos(self, i): 
-    return sum([self.word_size(j) for j in range(i)])
-  
-  # distance between two words x and y
-  def word_dist(self, x, y):
-    return sum([self.word_size(i) for i in range(min(x,y), max(x,y))])
+  def token_dist(self, a, b):
+    """distance between two tokens with positions a and b"""
+    return sum([self.token_width(i) for i in range(min(a, b), max(a, b))])
   
   def arcs(self):
-    return [(min(src,trg), max(src,trg)) for ((src,trg),_) in self.deprels]
-  
-  # depth of the link from src to trg
-  def depth(self,src,trg):
-    # projective arcs "under" (src,trg)?
-    sub_arcs = [(x,y) for (x,y) in self.arcs() 
-                if (src < x and y <= trg) or (src == x and y < trg)]
+    """helper method to extract bare arcs (pairs of positions) form deprels
+    NOTE: arcs are extracted ltr, but I don't know if this is really needed"""
+    return [(min(src, trg), max(src, trg)) for ((src, trg),_) in self.deprels]
 
-    if sub_arcs:
-      return 1 + max([0] + [self.depth(x,y) for (x,y) in sub_arcs])
-    return 0
+  def arc_height(self, src, trg):
+    """height of the arc between src and trg, cf. aheight"""
 
-  # abs height of the arc between nodes with positions src and trg?
-  def arc_height(self, src, trg): # cf. aheight
-    return self.depth(min(src,trg), max(src,trg)) + 1
+    def depth(a,b):
+      # projective arcs "under" a-b
+      sub_arcs = [(x,y) for (x,y) in self.arcs() 
+                  if (a < x and y <= b) or (a == x and y < b)]
+      if sub_arcs:
+        return 1 + max([0] + [depth(x,y) for (x,y) in sub_arcs]) 
+      return 0
+    
+    return depth(min(src,trg), max(src,trg)) + 1
   
   def to_svg(self):
-    words_width = sum([self.word_size(i) for i in range(len(self.tokens))])
-    spaces_width = SPACE_LEN * (len(self.tokens) - 1)
-    tot_w = words_width + spaces_width
-    tot_h = 50 + 20 * max([0] + [self.arc_height(src,trg) for (src,trg) in self.arcs()])
+    """generate svg tree code"""
+    tokens_w = sum([self.token_width(i) for i in range(len(self.tokens))])
+    spaces_w = SPACE_LEN * (len(self.tokens) - 1)
+
+    # picture dimensions 
+    tot_w = tokens_w + spaces_w
+    tot_h = 50 + 20 * max([0] + [self.arc_height(src,trg) 
+                                 for (src,trg) in self.arcs()])
+    
     svg = Drawing(tot_w,tot_h, origin=(0,0))
     
-    # draw tokens (froms + pos tags)
+    # draw tokens (forms + pos tags)
     for (i,token) in enumerate(self.tokens):
-      x = self.word_xpos(i)
+      x = self.token_xpos(i)
       y = tot_h
       svg.append(Text(token["form"], NORMAL_TEXT_SIZE, x=x, y=y))
       svg.append(Text(token["pos"], TINY_TEXT_SIZE, x=x, y=tot_h-15))
 
     # draw deprels (arcs + labels)
     for ((src,trg),label) in self.deprels:
-      dxy = self.word_dist(src, trg)
+      # otherwise everything will be mirrored
+      ycorrect = lambda y: (round(tot_h)) - round(y)
+      
+      dxy = self.token_dist(src, trg)
       ndxy = 100 * 0.5 * self.arc_height(src,trg)
       w = dxy - (600 * 0.5) / dxy
       h = ndxy / (3 * 0.5)
       r = h / 2
-      x = self.word_xpos(min(src,trg)) + (dxy / 2) + (20 if trg < src else 10) # some centering magic
+      x = self.token_xpos(min(src,trg)) + (dxy/2) + (20 if trg < src else 10)
       y = ARC_BASE_YPOS
-      ycorrect = lambda y: (round(tot_h)) - round(y)
       x1 = x - w / 2
       x2 = min(x, (x1 + r))
       x4 = x + w / 2
@@ -106,16 +109,17 @@ class VisualStanza:
 
       # draw arc
       arc_path = Path(stroke='black', fill='none')
-      arc_path.M(x1, y1)
-      arc_path.Q(x1, y2, x2, y2)
-      arc_path.L(x3,y2)
-      arc_path.Q(x4, y2, x4, y1)
+      arc_path.M(x1, y1).Q(x1, y2, x2, y2).L(x3,y2).Q(x4, y2, x4, y1)
       svg.append(arc_path)
 
       # draw arrow
       x_arr = x + (w / 2) if trg < src else x - (w / 2)
       y_arr = ycorrect(y - 5)
-      arrow = Lines(x_arr, y_arr, x_arr - 3, y_arr - 6, x_arr + 3, y_arr - 6, stroke="black", fill="black", close="true")
+      arrow = Lines(
+        x_arr, y_arr, 
+        x_arr - 3, y_arr - 6, 
+        x_arr + 3, y_arr - 6, 
+        stroke="black", fill="black", close="true")
       svg.append(arrow)
 
       # draw label
@@ -124,15 +128,25 @@ class VisualStanza:
       svg.append(Text(label, TINY_TEXT_SIZE, x=x_lab, y=y_lab))
 
     # draw root arrow & text
-    x_root_line = self.word_xpos(self.root) + 15
+    x_root_line = self.token_xpos(self.root) + 15
     y_root_line = ycorrect(tot_h)
-    x_root_len = tot_h - ARC_BASE_YPOS
-    root_line = Line(x_root_line, y_root_line, x_root_line, y_root_line + x_root_len, stroke="black")
+    root_len = tot_h - ARC_BASE_YPOS
+    root_line = Line(
+      x_root_line, y_root_line, 
+      x_root_line, y_root_line + root_len, 
+      stroke="black")
     svg.append(root_line)
-    arrow_endpoint = y_root_line + x_root_len
-    root_arrow = Lines(x_root_line, arrow_endpoint, x_root_line - 3, arrow_endpoint - 6, x_root_line + 3, arrow_endpoint - 6, stroke="black", fill="black", close="true")
+    arrow_endpoint = y_root_line + root_len
+    root_arrow = Lines(
+      x_root_line, arrow_endpoint, 
+      x_root_line - 3, arrow_endpoint - 6, 
+      x_root_line + 3, arrow_endpoint - 6, 
+      stroke="black", fill="black", close="true")
     svg.append(root_arrow)
-    svg.append(Text("root", TINY_TEXT_SIZE, x=x_root_line + 5, y=ycorrect(tot_h - 10)))
+    svg.append(Text(
+      "root", 
+      TINY_TEXT_SIZE, 
+      x=x_root_line + 5, y=ycorrect(tot_h - 10)))
 
     return svg
 
