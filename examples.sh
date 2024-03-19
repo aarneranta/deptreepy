@@ -1,3 +1,5 @@
+echo "## make sure FILE.conllu is a CoNLLU file or a link to one"
+
 echo "## statistics on POS of nsubj"
 python3 deptreepy.py 'match_wordlines DEPREL nsubj | statistics POS' <FILE.conllu
 
@@ -6,6 +8,9 @@ cat FILE.conllu | ./deptreepy.py 'match_trees SEQUENCE_ (LEMMA politi*) | extrac
 
 echo "## subtrees with both head-initial and head-final modifiers"
 cat FILE.conllu | ./deptreepy.py 'match_subtrees TREE (AND) (HEAD_DISTANCE >0) (HEAD_DISTANCE <0)'
+
+echo "## subtrees where the head is a noun and it has no determiner" 
+cat FILE.conllu | ./deptreepy.py 'match_subtrees (AND (POS NOUN) (HAS_NO_SUBTREE (DEPREL det)))'
 
 echo "## wordlines with feature starting In"
 cat FILE.conllu | ./deptreepy.py 'match_wordlines FEATS *=In*'

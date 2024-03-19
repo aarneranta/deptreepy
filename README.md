@@ -64,6 +64,7 @@ The following patterns match only trees:
    SEQUENCE <pattern>*        # <pattern>* matches the sequence of wordlines exactly 
    SEQUENCE_ <pattern>*       # <pattern>* matches a subset of wordlines
    HAS_SUBTREE <pattern>*     # some immediate subtree matches this pattern
+   HAS_NO_SUBTREE <pattern>*  # no immediate subtree matches this pattern
    IS_NONPROJECTIVE           # the tree is non-projective
 
 The auxialiary concepts are:

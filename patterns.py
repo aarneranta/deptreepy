@@ -72,6 +72,8 @@ def match_deptree(patt: Pattern, tree: DepTree) -> bool:
                 return (all(any(match_wordline(p, t) for t in tree.wordlines()) for p in patts))
             case Pattern('HAS_SUBTREE', patts):
                 return any(all(match_deptree(p, st) for p in patts) for st in tree.subtrees) 
+            case Pattern('HAS_NO_SUBTREE', patts):
+                return not any(all(match_deptree(p, st) for p in patts) for st in tree.subtrees) 
             case Pattern('CONTAINS_SUBTREE', patts):  ## to revisit
                 return (all(match_deptree(p, tree) for p in patts) or
                         any(match_deptree(patt, st) for st in tree.subtrees)) 
