@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Iterable, Callable
 from trees import *
 from patterns import *
+from visualize_ud import conll2svg
 
 
 @dataclass
@@ -302,6 +303,13 @@ def change_subtrees(patt: Pattern) -> Operation:
         )
 
 
+@operation
+def visualize_conllu(s: Iterable[str]) -> Iterable[str]:
+    'show CoNLLU as SVG in HTML'
+    s = '\n'.join([s.strip() for s in s])  ## type of conll2svg should be It[str] 
+    return conll2svg(s)
+
+
 def from_script(filename: str) -> Operation:
     "reads an operation by parsing a file"
     with open(filename) as script:
@@ -341,6 +349,8 @@ def parse_operation(ss: list[str]) -> Operation:
             return statistics(ww)
         case ['underscore_fields', *ww]:
             return undescore_fields(ww)
+        case ['visualize_conllu']:
+            return visualize_conllu
         case ['from_script', filename]:
             return from_script(filename)
         case _:
@@ -384,6 +394,7 @@ def execute_pipe_on_strings(command: str, strs: Iterable[str]):
     oper = preprocess_operation(oper)
     oper = postprocess_operation(oper)
     print('# ', oper)
+
     for t in oper(strs):
         print(t)
 

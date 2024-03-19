@@ -2,6 +2,8 @@
 Python utilities for dependency trees, replicating some of gf-ud.
 Designed to work on CoNNL-U data, such as in https://universaldependencies.org
 
+You can start by looking at a quick set of [example uses](./examples.sh)
+
 For a help message: do
 ```
   $ python3 deptreepy.py
@@ -29,6 +31,7 @@ The command-arg combinations are
    'extract_sentences'               # return FORM sequences as one-liners
    'trees2conllu'                    # convert internal trees to CoNLLU stanzas
    'trees2wordlines'                 # convert internal trees to a single sequence of wordlines
+   'visualize_conllu'                # convert a CoNNLU text into SVG in HTML
    'from_script <file>'              # read commands from a file
 
 The commands without <file> arguments read CoNLL-U content from std-in,

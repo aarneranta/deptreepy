@@ -1,7 +1,7 @@
 import sys
 from argparse import ArgumentParser, ArgumentTypeError
 from itertools import chain, repeat, islice
-
+from typing import Iterable
 from drawsvg import *
 
 from trees import read_wordlines
@@ -150,12 +150,20 @@ class VisualStanza:
 
     return svg
 
-if __name__ == "__main__":
-  intxt = sys.stdin.read()
-  stanzas = [span for span in intxt.split("\n\n") if span.strip()]
+
+def conll2svg(intxt: str) -> Iterable[str]:
+
+    stanzas = [span for span in intxt.split("\n\n") if span.strip()]
   
-  print('<html>\n<body>\n')
-  for stanza in stanzas:
-    svg = VisualStanza(stanza).to_svg()
-    sys.stdout.write(svg.as_svg())
-  print('</body>\n</html>')
+    yield '<html>\n<body>\n'
+    for stanza in stanzas:
+        svg = VisualStanza(stanza).to_svg()
+        yield svg.as_svg()
+    yield '</body>\n</html>'
+
+
+if __name__ == "__main__":
+    intxt = sys.stdin.read()
+    for line in conll2svg(intxt):
+        print(line)
+

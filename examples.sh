@@ -33,5 +33,9 @@ cat FILE.conllu | ./deptreepy.py 'change_trees PRUNE 2 | trees2conllu'
 echo "## extract predicate frames by reading a pattern from a script" 
 cat FILE.conllu | ./deptreepy.py 'from_script predicates.oper'
 
-echo "## visualize trees in SVG (requires Haskell)"
-cat FILE.conllu | runghc utils/VisualizeUD.hs svg >FILE-trees.html
+echo "## visualize trees in SVG"
+cat FILE.conllu | ./deptreepy.py 'visualize_conllu' >FILE-trees.html
+
+echo "## visualize the results of pattern matching"
+cat FILE.conllu | ./deptreepy.py 'match_trees (POS NOUN) | trees2conllu | visualize_conllu' >FILE-trees.html
+
