@@ -462,6 +462,8 @@ TSWLatexianTemp*
 # Uncomment the next line to have this generated file ignored.
 #*Notes.bib
 
-# TeX files and output PDFs (used for testing visualizations)
-*.tex
-*.pdf
+# example files used for testing visualizations
+example.tex
+example.conllu
+example.pdf
+example.html
