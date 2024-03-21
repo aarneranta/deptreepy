@@ -2,6 +2,21 @@
 Python utilities for dependency trees, replicating some of gf-ud.
 Designed to work on CoNNL-U data, such as in https://universaldependencies.org
 
+## Installation
+Deptreepy requires Python 3. To install dependencies, you can run
+
+```
+pip install -r requirements.txt
+```
+
+You can now use deptreepy by running
+
+```
+python deptreepy.py
+```
+
+## Usage
+
 You can start by looking at a quick set of [example uses](./examples.sh)
 
 For a help message: do
