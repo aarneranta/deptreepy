@@ -157,19 +157,14 @@ use trees2conllu
 
   cat FILE.conllu | ./deptreepy.py 'change_trees PRUNE 2 | trees2conllu'
 
-To visualize dependency trees, you can use the Haskell program utils/VisualizeUD.hs.
-It can be used directly on CoNLL-U input,
+To visualize dependency trees (as SVG images in an HTML document),
+
+  cat FILE.conllu | ./deptreepy.py 'visualize_conllu' >FILE-trees.html
+
+You can use the Haskell program utils/VisualizeUD.hs, which also has an option to generate LaTeX code,
 
   cat FILE.conllu | runghc utils/VisualizeUD.hs (latex | svg)
 
-to produce either a LaTeX file or an HTML file with embedded SVG images.
-To pipe into this visualization from deptreepy, use the trees2conllu operation
-at the end of the pipe, for instance,
-
-  cat FILE.conllu |
-    ./deptreepy.py 'match_subtrees IS_NONPROJECTIVE | trees2conllu' |
-    runghc utils/VisualizeUD.hs svg
-
-The svg option is recommended for non-latin alphabets such as Chinese, unless you have
+SVG is recommended for non-latin alphabets such as Chinese, unless you have
 suitable LaTeX packages available.
 ```
