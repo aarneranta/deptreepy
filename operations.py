@@ -7,7 +7,8 @@ from typing import Iterable, Callable
 from trees import *
 from patterns import *
 from visualize_ud import conll2svg
-
+from udpipe2_client import process
+from yaml import safe_load
 
 @dataclass
 class Operation:
@@ -117,7 +118,6 @@ def trees2wordliness(trees: Iterable[DepTree]) -> Iterable[list[WordLine]]:
     for tree in trees:
         tree = relabel_deptree(tree)
         yield tree.wordlines()
-
 
 @operation
 def trees2conllu(trees: Iterable[DepTree]) -> Iterable[str]:
@@ -309,6 +309,23 @@ def visualize_conllu(s: Iterable[str]) -> Iterable[str]:
     s = '\n'.join([s.strip() for s in s])  ## type of conll2svg should be It[str] 
     return conll2svg(s)
 
+@operation
+def txt2conllu(corpus: Iterable[str]) -> CoNLLU:
+    "parse a raw text corpus into CoNNL-U, using UDPipe2"
+    corpus = '\n'.join([line.strip() for line in corpus])
+    with open("udpipe2_params.yaml") as f:
+        udpipe2_params = safe_load(f)
+    udpipe2_params = {
+        "data": corpus,
+        "model": udpipe2_params["model"],
+        # empty strings (as opposed to None) will enable these components)
+        "tokenizer": "", "parser": "", "tagger": "",
+        "outfile": None, # stdout
+        "service": "https://lindat.mff.cuni.cz/services/udpipe/api"
+    }
+    parsed = process(udpipe2_params)
+    for line in parsed.split("\n"):
+        yield line
 
 def from_script(filename: str) -> Operation:
     "reads an operation by parsing a file"
@@ -353,6 +370,8 @@ def parse_operation(ss: list[str]) -> Operation:
             return visualize_conllu
         case ['from_script', filename]:
             return from_script(filename)
+        case ['txt2conllu']:
+            return txt2conllu
         case _:
             raise ParseError(' '.join(['operation'] + ss + ['not matched']))
 

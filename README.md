@@ -47,6 +47,7 @@ The command-arg combinations are
    'trees2conllu'                    # convert internal trees to CoNLLU stanzas
    'trees2wordlines'                 # convert internal trees to a single sequence of wordlines
    'visualize_conllu'                # convert a CoNNLU text into SVG in HTML
+   'txt2conllu'                      # parse raw text with UDPipe2 (model config in udpipe2_params.yaml)
    'from_script <file>'              # read commands from a file
 
 The commands without <file> arguments read CoNLL-U content from std-in,
