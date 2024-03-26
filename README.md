@@ -48,6 +48,7 @@ The command-arg combinations are
    'trees2wordlines'                 # convert internal trees to a single sequence of wordlines
    'visualize_conllu'                # convert a CoNNLU text into SVG in HTML
    'txt2conllu'                      # parse raw text with UDPipe2 (model config in udpipe2_params.yaml)
+   'conllu2trees'                    # convert conllu to deptrees (e.g. to analyse parse result further)
    'from_script <file>'              # read commands from a file
 
 The commands without <file> arguments read CoNLL-U content from std-in,
@@ -143,6 +144,10 @@ The command change_subtrees admits the following patterns:
 
 It traverses each tree recursively top-down: the next step is performed in the tree
 resulting from the previoues step.
+
+The Udpipe-2 parser can be called from a pipe and its output converted to trees for further analysis:
+
+  cat FILE.txt | ./deptreepy.py 'txt2conllu | conllu2trees | match_subtrees (POS ADJ)'
 
 The command change_trees only performs the changes in entire trees.
 Examples:

@@ -372,6 +372,8 @@ def parse_operation(ss: list[str]) -> Operation:
             return from_script(filename)
         case ['txt2conllu']:
             return txt2conllu
+        case ['conllu2trees']:
+            return conllu2trees
         case _:
             raise ParseError(' '.join(['operation'] + ss + ['not matched']))
 

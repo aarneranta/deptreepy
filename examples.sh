@@ -33,6 +33,9 @@ cat FILE.conllu | ./deptreepy.py 'change_trees PRUNE 2 | trees2conllu'
 echo "## extract predicate frames by reading a pattern from a script" 
 cat FILE.conllu | ./deptreepy.py 'from_script predicates.oper'
 
+echo "## parse a text file and analyse the result"
+cat FILE.txt | ./deptreepy.py 'txt2conllu | conllu2trees | match_subtrees (POS ADJ)'
+
 echo "## visualize trees in SVG"
 cat FILE.conllu | ./deptreepy.py 'visualize_conllu' >FILE-trees.html
 
