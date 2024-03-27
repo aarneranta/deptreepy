@@ -79,6 +79,8 @@ class VisualStanza:
     tot_h = 55 + 20 * max([0] + [self.arc_height(src,trg) 
                                  for (src,trg) in self.arcs()])
     
+    # otherwise everything will be mirrored
+    ycorrect = lambda y: (round(tot_h)) - round(y) - 5
     svg = Drawing(tot_w,tot_h, origin=(0,0))
     
     # draw tokens (forms + pos tags)
@@ -90,8 +92,6 @@ class VisualStanza:
 
     # draw deprels (arcs + labels)
     for ((src,trg),label) in self.deprels:
-      # otherwise everything will be mirrored
-      ycorrect = lambda y: (round(tot_h)) - round(y) - 5
       
       dxy = self.token_dist(src, trg)
       ndxy = 100 * 0.5 * self.arc_height(src,trg)
