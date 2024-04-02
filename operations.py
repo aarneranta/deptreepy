@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Iterable, Callable
 from trees import *
 from patterns import *
+from treetypes import treetype_statistics_dict
 from visualize_ud import conll2svg
 from udpipe2_client import process
 from yaml import safe_load
@@ -159,7 +160,7 @@ extract_sentences : Operation = pipe([trees2wordliness, wordlines2sentences])
 
 
 @operation
-def undescore_fields(fields: list[str]) -> Operation:
+def underscore_fields(fields: list[str]) -> Operation:
     return Operation (
         lambda ws: (replace_by_underscores(fields, w) for w in ws),
         Iterable[WordLine],
@@ -193,6 +194,12 @@ def statistics(fields: list[str]) -> Operation:
         'statistics',
         "frequency table of a combination of fields, sorted as a list in descending order"
         )
+
+
+@operation
+def treetype_statistics(trees: Iterable[DepTree]) -> list:
+    "frequency table of types of trees and subtrees, (POS, DEPREL) as atomic type"    
+    return sorted_statistics(treetype_statistics_dict(trees))
 
 
 def count_wordlines() -> Operation:
@@ -364,8 +371,10 @@ def parse_operation(ss: list[str]) -> Operation:
             return take_trees(int(begin), int(end))
         case ['statistics', *ww]:
             return statistics(ww)
+        case ['treetype_statistics']:
+            return treetype_statistics
         case ['underscore_fields', *ww]:
-            return undescore_fields(ww)
+            return underscore_fields(ww)
         case ['visualize_conllu']:
             return visualize_conllu
         case ['from_script', filename]:
