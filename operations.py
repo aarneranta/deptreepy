@@ -11,6 +11,10 @@ from visualize_ud import conll2svg
 from udpipe2_client import process
 from yaml import safe_load
 
+# not used, letting UD-Pipe do sentence splitting
+# from sentence_splitter import split_text_into_sentences
+
+
 @dataclass
 class Operation:
     "typed stream operations"
@@ -199,7 +203,7 @@ def statistics(fields: list[str]) -> Operation:
 @operation
 def treetype_statistics(trees: Iterable[DepTree]) -> list:
     "frequency table of types of trees and subtrees, (POS, DEPREL) as atomic type"    
-    return sorted_statistics(treetype_statistics_dict(trees))
+    return sorted_statistics(treetype_statistics_dict(trees), key=lambda x: x[0])
 
 
 def count_wordlines() -> Operation:

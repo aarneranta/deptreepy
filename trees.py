@@ -86,10 +86,10 @@ def wordline_statistics(fields, wordlines):
     return stats
 
 
-def sorted_statistics(stats):
+def sorted_statistics(stats, key=lambda x: x):
     "frequency given as dict, sorted as list in descending order"
     stats = list(stats.items())
-    stats.sort(key = lambda it: -it[1])
+    stats.sort(key = lambda it: -key(it[1]))
     return stats
 
 
