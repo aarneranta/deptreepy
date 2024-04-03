@@ -5,21 +5,22 @@ from trees import *
 
 @dataclass
 class TreeType:
-    "the 'type' of a deptree: (POS, DEPREL)* -> (POS, DEPREL) of head and dependents"
-    args: list[tuple[str, str]]  # POS, DEPREL
-    val: tuple[str, str]
+    "the 'type' of a deptree: (POS, DEPREL)[(POS, DEPREL)*] of head and dependents"
+    head: tuple[str, str]
+    deps: list[tuple[str, str]]  # POS, DEPREL
 
+    
     def __str__(self):
-        return ' -> '.join([str(arg) for arg in self.args] + [str(self.val)])
+        return str(self.head) + str(self.deps)
 
     def __hash__(self):
         return self.__str__().__hash__()
 
 
 def deptree2treetype(tree: DepTree) -> tuple[TreeType, str]:
-    val = (tree.root.POS, tree.root.DEPREL)
-    args = [(t.root.POS, t.root.DEPREL) for t in tree.subtrees]
-    return (TreeType(args, val),
+    head = (tree.root.POS, tree.root.DEPREL)
+    deps = [(t.root.POS, t.root.DEPREL) for t in tree.subtrees]
+    return (TreeType(head, deps),
             ' '.join([w.FORM for w in sorted(
                     [t.root for t in tree.subtrees] + [tree.root], key = lambda w: w.ID)]))
 
@@ -42,6 +43,22 @@ def treetype_statistics_dict(trees: Iterable[DepTree]) -> dict[TreeType, tuple[i
                 dict[typ] = (1, s)
 
     return dict
+
+
+def head_dep_statistics_dict(trees: Iterable[DepTree]) -> dict[tuple[tuple[str, str], tuple[str, str]], int]:
+    dict = {}
+    for tree in trees:
+        for typ, _ in deptree2treetypes(tree):
+            for item in typ.deps:
+                dtyp = (typ.head, item)
+                if dtyp in dict:
+                    dict[dtyp] = dict[dtyp] + 1
+                else:
+                    dict[dtyp] = 1
+
+    return dict
+
+
 
 
 

@@ -40,6 +40,7 @@ The command-arg combinations are
    'change_subtrees <pattern>'       # change subtrees recursively
    'statistics <field>*'             # frequency-ordered statistics of <field>*
    'treetype_statistics'             # frequency-ordered statistics of types of trees
+   'head_dep_statistics'             # frequency-ordered statistics of head-dependent pairs
    'count_wordlines'                 # the number of wordlines
    'count_trees'                     # the number ot trees
    'take_trees <int-from> <int-to>'  # selection of trees

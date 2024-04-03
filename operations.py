@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Iterable, Callable
 from trees import *
 from patterns import *
-from treetypes import treetype_statistics_dict
+from treetypes import treetype_statistics_dict, head_dep_statistics_dict
 from visualize_ud import conll2svg
 from udpipe2_client import process
 from yaml import safe_load
@@ -206,6 +206,12 @@ def treetype_statistics(trees: Iterable[DepTree]) -> list:
     return sorted_statistics(treetype_statistics_dict(trees), key=lambda x: x[0])
 
 
+@operation
+def head_dep_statistics(trees: Iterable[DepTree]) -> list:
+    "frequency table of head-dependent pairs, (POS, DEPREL) as atomic type"    
+    return sorted_statistics(head_dep_statistics_dict(trees))
+
+
 def count_wordlines() -> Operation:
     return Operation (
         lambda ws: [len(list(ws))],
@@ -377,6 +383,8 @@ def parse_operation(ss: list[str]) -> Operation:
             return statistics(ww)
         case ['treetype_statistics']:
             return treetype_statistics
+        case ['head_dep_statistics']:
+            return head_dep_statistics
         case ['underscore_fields', *ww]:
             return underscore_fields(ww)
         case ['visualize_conllu']:
