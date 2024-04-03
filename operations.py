@@ -200,16 +200,24 @@ def statistics(fields: list[str]) -> Operation:
         )
 
 
-@operation
-def treetype_statistics(trees: Iterable[DepTree]) -> list:
-    "frequency table of types of trees and subtrees, (POS, DEPREL) as atomic type"    
-    return sorted_statistics(treetype_statistics_dict(trees), key=lambda x: x[0])
+def treetype_statistics(fields: list[str]) -> Operation:
+    return Operation(
+        lambda trees: sorted_statistics(treetype_statistics_dict(trees, fields)),
+        Iterable[DepTree],
+        list,
+        'treetype_statistics',
+        "frequency table of types of trees and subtrees, field* as atomic type"    
+        )
 
 
-@operation
-def head_dep_statistics(trees: Iterable[DepTree]) -> list:
-    "frequency table of head-dependent pairs, (POS, DEPREL) as atomic type"    
-    return sorted_statistics(head_dep_statistics_dict(trees))
+def head_dep_statistics(fields: list[str]) -> Operation:
+    return Operation(
+        lambda trees: sorted_statistics(head_dep_statistics_dict(trees, fields)),
+        Iterable[DepTree],
+        list,
+        'head_dep_statistics',
+        "frequency table of types of head-dependent pairs, field* as atomic type"    
+        )
 
 
 def count_wordlines() -> Operation:
@@ -381,10 +389,10 @@ def parse_operation(ss: list[str]) -> Operation:
             return take_trees(int(begin), int(end))
         case ['statistics', *ww]:
             return statistics(ww)
-        case ['treetype_statistics']:
-            return treetype_statistics
-        case ['head_dep_statistics']:
-            return head_dep_statistics
+        case ['treetype_statistics', *ww]:
+            return treetype_statistics(ww)
+        case ['head_dep_statistics', *ww]:
+            return head_dep_statistics(ww)
         case ['underscore_fields', *ww]:
             return underscore_fields(ww)
         case ['visualize_conllu']:

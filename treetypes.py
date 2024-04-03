@@ -6,8 +6,8 @@ from trees import *
 @dataclass
 class TreeType:
     "the 'type' of a deptree: (POS, DEPREL)[(POS, DEPREL)*] of head and dependents"
-    head: tuple[str, str]
-    deps: list[tuple[str, str]]  # POS, DEPREL
+    head: tuple[str]
+    deps: list[tuple[str]]   # POS, DEPREL
 
     
     def __str__(self):
@@ -17,42 +17,42 @@ class TreeType:
         return self.__str__().__hash__()
 
 
-def deptree2treetype(tree: DepTree) -> tuple[TreeType, str]:
-    head = (tree.root.POS, tree.root.DEPREL)
-    deps = [(t.root.POS, t.root.DEPREL) for t in tree.subtrees]
-    return (TreeType(head, deps),
-            ' '.join([w.FORM for w in sorted(
-                    [t.root for t in tree.subtrees] + [tree.root], key = lambda w: w.ID)]))
+def deptree2treetype(tree: DepTree, fields: list[str]) -> TreeType:
+#    if fs := [f not in WORDLINE_FIELDS for f in fields]:
+ #       raise TypeError('invalid fields ' + str(fs))
+    head = tuple(tree.root.as_dict()[f] for f in fields)
+    deps = [tuple(t.root.as_dict()[f] for f in fields) for t in tree.subtrees]
+    return TreeType(head, deps)
 
 
-def deptree2treetypes(tree: DepTree) -> list[tuple[TreeType, str]]:
-    typs = [deptree2treetype(tree)]
+def deptree2treetypes(tree: DepTree, fields: list[str]) -> list[TreeType]:
+    typs = [deptree2treetype(tree, fields)]
     for t in tree.subtrees:
-        for typ in deptree2treetypes(t):
+        for typ in deptree2treetypes(t, fields):
             typs.append(typ)
     return typs
 
 
-def treetype_statistics_dict(trees: Iterable[DepTree]) -> dict[TreeType, tuple[int, str]]:
+def treetype_statistics_dict(trees: Iterable[DepTree], fields: list[str]) -> dict[TreeType, int]:
     dict = {}
     for tree in trees:
-        for typ, s in deptree2treetypes(tree):
+        for typ in deptree2treetypes(tree, fields):
             if typ in dict:
-                dict[typ] = (dict[typ][0] + 1, dict[typ][1])
+                dict[typ] += 1
             else:
-                dict[typ] = (1, s)
+                dict[typ] = 1
 
     return dict
 
 
-def head_dep_statistics_dict(trees: Iterable[DepTree]) -> dict[tuple[tuple[str, str], tuple[str, str]], int]:
+def head_dep_statistics_dict(trees: Iterable[DepTree], fields: list[str]) -> dict[tuple[tuple[str], tuple[str]], int]:
     dict = {}
     for tree in trees:
-        for typ, _ in deptree2treetypes(tree):
+        for typ in deptree2treetypes(tree, fields):
             for item in typ.deps:
                 dtyp = (typ.head, item)
                 if dtyp in dict:
-                    dict[dtyp] = dict[dtyp] + 1
+                    dict[dtyp] += 1
                 else:
                     dict[dtyp] = 1
 
