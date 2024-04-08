@@ -31,7 +31,7 @@ usage:
 
 The command-arg combinations are
 
-   cosine_similarity <file> <file> <field>*  # cosine similarity of treebanks wrt <field>*
+   cosine_similarity <field>* <file> <file>  # cosine similarity of treebanks wrt <field>*
    'match_trees <pattern>'           # match entire trees 
    'match_subtrees <pattern>'        # match entire trees and recursively their subtrees
    'match_wordlines <pattern>'       # match individual wordlines in all trees
