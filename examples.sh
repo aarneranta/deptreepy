@@ -1,7 +1,13 @@
 echo "## make sure FILE.conllu is a CoNLLU file or a link to one"
 
 echo "## statistics on POS of nsubj"
-python3 deptreepy.py 'match_wordlines DEPREL nsubj | statistics POS' <FILE.conllu
+./deptreepy.py 'match_wordlines DEPREL nsubj | statistics POS' <FILE.conllu
+
+echo "## cosine similarity of LEMMA for files ENG.conllu and FIN.conllu
+./deptreepy.py cosine_similarity FEATS ENG.conllu FIN.conllu 
+
+echo "## cosine similarity of LEMMA, ignoring words whose POS is PUNCT
+./deptreepy.py cosine_similarity LEMMA -filter='NOT (POS PUNCT)' ENG.conllu FIN.conllu 
 
 echo "## sentences where lemma politi* occurs"
 cat FILE.conllu | ./deptreepy.py 'match_trees SEQUENCE_ (LEMMA politi*) | extract_sentences'

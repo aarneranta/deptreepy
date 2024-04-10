@@ -31,7 +31,7 @@ usage:
 
 The command-arg combinations are
 
-   cosine_similarity <field>* <file> <file>  # cosine similarity of treebanks wrt <field>*
+   cosine_similarity <field>* <filter>? <file> <file>  # cosine similarity of treebanks wrt <field>*
    'match_trees <pattern>'           # match entire trees 
    'match_subtrees <pattern>'        # match entire trees and recursively their subtrees
    'match_wordlines <pattern>'       # match individual wordlines in all trees
@@ -67,6 +67,12 @@ necessary to group the command into one command-line argument.
 The <field> arguments correspond to CoNLL-U word line fields from left to right:
 
     ID FORM LEMMA POS XPOS FEATS HEAD DEPREL DEPS MISC
+
+The optional <filter> argument in cosine_similarity has the form
+
+    -filter='<pattern>'
+
+where the surrounding quotes are obligatory if there are spaces in the pattern.
 
 The following patterns match both wordlines and trees, depending on the command:
 
