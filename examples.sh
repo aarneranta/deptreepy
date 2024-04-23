@@ -12,6 +12,9 @@ echo "## cosine similarity of LEMMA, ignoring words whose POS is PUNCT
 echo "## sentences where lemma politi* occurs"
 cat FILE.conllu | ./deptreepy.py 'match_trees SEQUENCE_ (LEMMA politi*) | extract_sentences'
 
+echo "## trees where the subsequence be + a/an occurs"
+cat FILE.conllu | ./deptreepy.py 'match_trees SUBSEQUENCE (LEMMA be) (LEMMA a)
+
 echo "trees with a metadata field whose value starts with Wh"
 cat FILE.conllu | ./deptreepy.py 'match_trees METADATA *=?Wh*'
 
@@ -23,6 +26,9 @@ cat FILE.conllu | ./deptreepy.py 'match_subtrees (AND (POS NOUN) (HAS_NO_SUBTREE
 
 echo "## wordlines with feature starting In"
 cat FILE.conllu | ./deptreepy.py 'match_wordlines FEATS *=In*'
+
+echo "## wordlines whose part of speech is not one of a function word"
+cat FILE.conllu | ./deptreepy.py 'match_wordlines NOT (POS IN ADP AUX PRON DET *CONJ PUNCT)'
 
 echo "## any segment followed by one where the subject is a pronoun"
 cat FILE.conllu | ./deptreepy.py 'match_segments SEGMENT (AND) (HAS_SUBTREE (AND (DEPREL nsubj) (POS PRON)))'

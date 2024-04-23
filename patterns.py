@@ -32,6 +32,9 @@ class Pattern(Tree):
 def match_wordline(patt: Pattern, word: WordLine) ->bool:
     "matching individual wordlines"
     match patt:
+        case Pattern(field, ['IN', *forms]) if field in WORDLINE_FIELDS:
+            wfield = word.as_dict()[field]
+            return any(match_str(form, wfield) for form in forms)
         case Pattern(field, [form]) if field in WORDLINE_FIELDS:
             return match_str(form, word.as_dict()[field])
         case Pattern('HEAD_DISTANCE', [n]):
@@ -70,6 +73,12 @@ def match_deptree(patt: Pattern, tree: DepTree) -> bool:
             case Pattern('SEQUENCE', patts):
                 return (len(patts) == len(sts := tree.wordlines()) 
                          and all(match_wordline(*pt) for pt in zip(patts, sts)))
+            case Pattern('SUBSEQUENCE', patts):
+                for i in range(len(tree.wordlines())-len(patts)):
+                     sts = tree.wordlines()[i:i+len(patts)]
+                     if all(match_wordline(*pt) for pt in zip(patts, sts)):
+                         return True
+                return False
             case Pattern('SEQUENCE_', patts):
                 return (all(any(match_wordline(p, t) for t in tree.wordlines()) for p in patts))
             case Pattern('HAS_SUBTREE', patts):

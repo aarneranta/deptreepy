@@ -77,6 +77,7 @@ where the surrounding quotes are obligatory if there are spaces in the pattern.
 The following patterns match both wordlines and trees, depending on the command:
 
    <field>  <strpatt>      # field with its value,      example: LEMMA poli*
+   <field> IN <strpatt>*   # field matching any of the given patterns
    HEAD_DISTANCE <inpred>  # linear distance from head, example: HEAD_DISTANCE >1
    AND <pattern>*          # all patterns patch
    OR  <pattern>*          # at least one of the patterns match
@@ -90,7 +91,8 @@ The following patterns match only trees:
    METADATA <strpatt>         # the metadata (comments) prefixed to the wordlines of the tree
    TREE <pattern> <pattern>*  # <pattern> matches the root, <pattern>* subtrees in sequence
    TREE_ <pattern> <pattern>* # <pattern> matches the root, <pattern>* a subset of subtrees
-   SEQUENCE <pattern>*        # <pattern>* matches the sequence of wordlines exactly 
+   SEQUENCE <pattern>*        # <pattern>* matches the sequence of wordlines exactly
+   SUBSEQUENCE <pattern>*     # <pattern>* matches a contiguous subsequence of wordlines
    SEQUENCE_ <pattern>*       # <pattern>* matches a subset of wordlines
    HAS_SUBTREE <pattern>*     # some immediate subtree matches this pattern
    HAS_NO_SUBTREE <pattern>*  # no immediate subtree matches this pattern
