@@ -1,7 +1,16 @@
 echo "## make sure FILE.conllu is a CoNLLU file or a link to one"
 
+echo "## statistics on POS DEPREL pairs"
+cat FILE.conllu | ./deptreepy.py 'statistics POS DEPREL'
+
 echo "## statistics on POS of nsubj"
-./deptreepy.py 'match_wordlines DEPREL nsubj | statistics POS' <FILE.conllu
+cat FILE.conllu | ./deptreepy.py 'match_wordlines DEPREL nsubj | statistics POS'
+
+echo "## statistics of POS 3-grams"
+cat FILE.conllu | ./deptreepy.py 'ngram_statistics 3 POS'
+
+echo "##statistics of tree configurations in terms of POS+DEPREL"
+cat FILE.conllu | ./deptreepy.py 'treetype_statistics POS DEPREL'
 
 echo "## cosine similarity of LEMMA for files ENG.conllu and FIN.conllu
 ./deptreepy.py cosine_similarity FEATS ENG.conllu FIN.conllu 
@@ -29,6 +38,9 @@ cat FILE.conllu | ./deptreepy.py 'match_wordlines FEATS *=In*'
 
 echo "## wordlines whose part of speech is not one of a function word"
 cat FILE.conllu | ./deptreepy.py 'match_wordlines NOT (POS IN ADP AUX PRON DET *CONJ PUNCT)'
+
+echo "## wordlins excluding a list of stopwords saved in a script file"
+cat FILE.conllu | ./deptreepy.py 'from_script stopwords.oper'
 
 echo "## any segment followed by one where the subject is a pronoun"
 cat FILE.conllu | ./deptreepy.py 'match_segments SEGMENT (AND) (HAS_SUBTREE (AND (DEPREL nsubj) (POS PRON)))'

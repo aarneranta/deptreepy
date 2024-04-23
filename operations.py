@@ -200,6 +200,16 @@ def statistics(fields: list[str]) -> Operation:
         )
 
 
+def ngram_statistics(n: int, fields: list[str]) -> Operation:
+    return Operation (
+        lambda ws: sorted_statistics(wordline_ngram_statistics(fields, ngrams(n, ws))),
+        Iterable[DepTree],
+        list,
+        'statistics',
+        "frequency table of ngrams of combinations of fields, sorted as a list in descending order"
+        )
+
+
 def treetype_statistics(fields: list[str]) -> Operation:
     return Operation(
         lambda trees: sorted_statistics(treetype_statistics_dict(trees, fields)),
@@ -389,6 +399,8 @@ def parse_operation(ss: list[str]) -> Operation:
             return take_trees(int(begin), int(end))
         case ['statistics', *ww]:
             return statistics(ww)
+        case ['ngram_statistics', n, *ww]:
+            return ngram_statistics(int(n), ww)
         case ['treetype_statistics', *ww]:
             return treetype_statistics(ww)
         case ['head_dep_statistics', *ww]:

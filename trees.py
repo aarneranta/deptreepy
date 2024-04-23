@@ -68,6 +68,14 @@ def read_wordlines(lines):
         except:
             pass
 
+        
+def ngrams(n, trees):
+    "n-grams of wordlines, inside trees but not over tree boundaries"
+    for tree in trees:
+        wordlines = tree.wordlines()
+        for i in range(len(wordlines)-n):
+            yield wordlines[i:i+n] 
+
 
 def replace_by_underscores(fields, wordline):
     "replace the values of named fields by underscores"
@@ -101,6 +109,15 @@ def cosine_similarity(stats1, stats2):
     len1 = sum(v*v for v in stats1.values())
     len2 = sum(v*v for v in stats2.values())
     return dot/((len1 ** 0.5) * (len2 ** 0.5)) 
+
+
+def wordline_ngram_statistics(fields, wordlinengrams):
+    "frequency table of n-grams of field combinations"
+    stats = {}
+    for ngram in wordlinengrams:
+        value = tuple(tuple(word.as_dict()[field] for field in fields) for word in ngram)
+        stats[value] = stats.get(value, 0) + 1
+    return stats
 
 
 @dataclass
