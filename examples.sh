@@ -12,6 +12,9 @@ echo "## cosine similarity of LEMMA, ignoring words whose POS is PUNCT
 echo "## sentences where lemma politi* occurs"
 cat FILE.conllu | ./deptreepy.py 'match_trees SEQUENCE_ (LEMMA politi*) | extract_sentences'
 
+echo "trees with a metadata field whose value starts with Wh"
+cat FILE.conllu | ./deptreepy.py 'match_trees METADATA *=?Wh*'
+
 echo "## subtrees with both head-initial and head-final modifiers"
 cat FILE.conllu | ./deptreepy.py 'match_subtrees TREE (AND) (HEAD_DISTANCE >0) (HEAD_DISTANCE <0)'
 

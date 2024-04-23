@@ -56,6 +56,8 @@ def match_deptree(patt: Pattern, tree: DepTree) -> bool:
                 return intpred(n, len(tree))
             case Pattern('DEPTH', [n]):
                 return intpred(n, tree.depth())
+            case Pattern('METADATA', [strpatt]):
+                return match_str(strpatt, '\n'.join(tree.comments))
             case Pattern ('IS_NONPROJECTIVE', _):
                 return nonprojective(tree)
             case Pattern('TREE', [pt, *patts]):

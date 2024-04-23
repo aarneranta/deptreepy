@@ -87,6 +87,7 @@ The following patterns match only trees:
 
    LENGTH <intpred>           # number of wordlines in the tree
    DEPTH <intpred>            # depth of the tree
+   METADATA <strpatt>         # the metadata (comments) prefixed to the wordlines of the tree
    TREE <pattern> <pattern>*  # <pattern> matches the root, <pattern>* subtrees in sequence
    TREE_ <pattern> <pattern>* # <pattern> matches the root, <pattern>* a subset of subtrees
    SEQUENCE <pattern>*        # <pattern>* matches the sequence of wordlines exactly 

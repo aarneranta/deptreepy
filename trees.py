@@ -138,7 +138,7 @@ def prune_subtrees_below(tree: Tree, depth: int) -> Tree:
 @dataclass
 class DepTree(Tree):
     "depencency trees: rose trees with word lines as nodes"
-    comments: list
+    comments: list[str]
     
     def __str__(self):
         lines = self.comments
