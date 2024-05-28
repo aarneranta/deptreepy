@@ -262,6 +262,13 @@ def find_paths_in_tree(patts: list[Pattern], tree: DepTree) -> list[DepTree]:
     else:
         []
 
+def find_paths_in_subtrees(patts: list[Pattern], tree: DepTree) -> list[DepTree]:
+    paths = find_paths_in_tree(patts, tree)
+    for st in tree.subtrees:
+        for p in find_paths_in_subtrees(patts, st):
+            paths.append(p)
+    return paths
+
     
 class ParseError(Exception):
     pass

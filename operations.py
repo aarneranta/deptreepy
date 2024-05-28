@@ -339,7 +339,7 @@ def change_subtrees(patt: Pattern) -> Operation:
 
 def find_paths(patts: [Pattern]) -> Operation:
     return Operation (
-        lambda ts: (p for t in ts for p in find_paths_in_tree(patts, t)),
+        lambda ts: (p for t in ts for p in find_paths_in_subtrees(patts, t)),
         Iterable[DepTree],
         Iterable[DepTree],
         'find_subtrees',
