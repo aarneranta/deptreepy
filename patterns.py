@@ -246,6 +246,22 @@ def changes_in_deptree(patt: Pattern, tree: DepTree) -> DepTree:
     tree.subtrees = [change_deptree(patt, t) for t in tree.subtrees]
     return tree
 
+
+def find_paths_in_tree(patts: list[Pattern], tree: DepTree) -> list[DepTree]:
+    "find paths in a stree and in all subtrees"
+    if patts[1:]:
+        return [DepTree(tree.root, [stp], [])
+                    for st in tree.subtrees
+                    for stp in find_paths_in_tree(patts[1:], st)
+                    if match_wordline(patts[0], tree.root)
+                    ]
+    elif patts:
+        return [DepTree(tree.root, [], [])
+                    for _ in [0]
+                    if match_wordline(patts[0], tree.root)]
+    else:
+        []
+
     
 class ParseError(Exception):
     pass

@@ -57,6 +57,9 @@ cat FILE.conllu | ./deptreepy.py 'change_trees PRUNE 2 | extract_sentences'
 echo "## drop words below depth 2 and return valid CoNLLU stanzas"
 cat FILE.conllu | ./deptreepy.py 'change_trees PRUNE 2 | trees2conllu'
 
+echo "## find paths with a noun modified by an nmod:poss modified by an nmod:poss"
+cat FILE.conllu | ./deptreepy.py 'find_paths (POS NOUN) (DEPREL nmod:poss) (DEPREL nmod:poss)'
+
 echo "## extract predicate frames by reading a pattern from a script" 
 cat FILE.conllu | ./deptreepy.py 'from_script predicates.oper'
 

@@ -337,6 +337,16 @@ def change_subtrees(patt: Pattern) -> Operation:
         'pattern-based changes recursively in subtrees, top-down'
         )
 
+def find_paths(patts: [Pattern]) -> Operation:
+    return Operation (
+        lambda ts: (p for t in ts for p in find_paths_in_tree(patts, t)),
+        Iterable[DepTree],
+        Iterable[DepTree],
+        'find_subtrees',
+        'find paths matching sequences of patterns'
+        )
+
+
 
 @operation
 def visualize_conllu(s: Iterable[str]) -> Iterable[str]:
@@ -389,6 +399,8 @@ def parse_operation(ss: list[str]) -> Operation:
             return change_trees(parse_pattern(' '.join([*ww])))
         case ['change_subtrees', *ww]:
             return change_subtrees(parse_pattern(' '.join([*ww])))
+        case ['find_paths', *ww]:
+            return find_paths(parse_pattern(' '.join(['PATH'] + [*ww])).subtrees)   
         case ['extract_sentences']:
             return extract_sentences
         case ['trees2conllu']:
