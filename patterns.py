@@ -18,8 +18,26 @@ def intpred(n, x):
         case '!': return x != number
         case '<': return x < number
         case '>': return x > number
-    
 
+
+def combos(altlists):
+    match altlists:
+        case [[], _]:
+            return []
+        case [xs, *yss]:
+            return [[x] + ys
+                    for x in xs
+                    for ys in combos([[y for y in ys if y != x] for ys in yss])]
+        case _:
+            return [[]]
+        
+
+def different_matches(mf, ps, xs):
+    "each pattern in ps finds a different matching object in xs with match function mf"
+    matchlist = [[x for x in xs if mf(p, x)] for p in ps]
+    return combos(matchlist)
+    
+    
 @dataclass
 class Pattern(Tree):
     def __str__(self):
@@ -69,7 +87,9 @@ def match_deptree(patt: Pattern, tree: DepTree) -> bool:
                          and all(match_deptree(*pt) for pt in zip(patts, sts)))
             case Pattern('TREE_', [pt, *patts]):
                 return (match_deptree(pt, tree)
-                         and all(any(match_deptree(p, t) for t in tree.subtrees) for p in patts))
+                        and different_matches(match_deptree, patts, tree.subtrees))
+# this could use the same subtree twice:            
+#                       and all(any(match_deptree(p, t) for t in tree.subtrees) for p in patts))
             case Pattern('SEQUENCE', patts):
                 return (len(patts) == len(sts := tree.wordlines()) 
                          and all(match_wordline(*pt) for pt in zip(patts, sts)))
