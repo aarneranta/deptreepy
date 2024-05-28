@@ -88,8 +88,8 @@ def match_deptree(patt: Pattern, tree: DepTree) -> bool:
             case Pattern('TREE_', [pt, *patts]):
                 return (match_deptree(pt, tree)
                         and different_matches(match_deptree, patts, tree.subtrees))
-# this could use the same subtree twice:            
-#                       and all(any(match_deptree(p, t) for t in tree.subtrees) for p in patts))
+                # this could use the same subtree twice:            
+                #       and all(any(match_deptree(p, t) for t in tree.subtrees) for p in patts))
             case Pattern('SEQUENCE', patts):
                 return (len(patts) == len(sts := tree.wordlines()) 
                          and all(match_wordline(*pt) for pt in zip(patts, sts)))
@@ -268,7 +268,7 @@ def changes_in_deptree(patt: Pattern, tree: DepTree) -> DepTree:
 
 
 def find_paths_in_tree(patts: list[Pattern], tree: DepTree) -> list[DepTree]:
-    "find paths in a stree and in all subtrees"
+    "find paths in a tree"
     if patts[1:]:
         return [DepTree(tree.root, [stp], [])
                     for st in tree.subtrees
@@ -280,9 +280,11 @@ def find_paths_in_tree(patts: list[Pattern], tree: DepTree) -> list[DepTree]:
                     for _ in [0]
                     if match_wordline(patts[0], tree.root)]
     else:
-        []
+        return []
 
+    
 def find_paths_in_subtrees(patts: list[Pattern], tree: DepTree) -> list[DepTree]:
+    "find parts in tree and all subtrees"
     paths = find_paths_in_tree(patts, tree)
     for st in tree.subtrees:
         for p in find_paths_in_subtrees(patts, st):
@@ -290,6 +292,23 @@ def find_paths_in_subtrees(patts: list[Pattern], tree: DepTree) -> list[DepTree]
     return paths
 
     
+def find_partial_local_trees(patts: list[Pattern], tree: DepTree) -> list[DepTree]:
+    "find partial trees in a tree"
+    if patts and match_wordline(patts[0], tree.root):
+        xss = different_matches(match_deptree, patts[1:], tree.subtrees)
+        
+        return [DepTree(tree.root, [DepTree(x.root, [], []) for x in xs], []) for xs in xss]
+    else:
+        return []
+
+    
+def find_partial_local_subtrees(patts: list[Pattern], tree: DepTree) -> list[DepTree]:
+    subtrs = find_partial_local_trees(patts, tree)
+    for st in tree.subtrees:
+        for p in find_partial_local_subtrees(patts, st):
+            subtrs.append(p)
+    return subtrs
+
 class ParseError(Exception):
     pass
 

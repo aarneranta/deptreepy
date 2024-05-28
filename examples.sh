@@ -60,6 +60,9 @@ cat FILE.conllu | ./deptreepy.py 'change_trees PRUNE 2 | trees2conllu'
 echo "## find paths with a noun modified by an nmod:poss modified by an nmod:poss"
 cat FILE.conllu | ./deptreepy.py 'find_paths (POS NOUN) (DEPREL nmod:poss) (DEPREL nmod:poss)'
 
+echo "## find partial subtrees where a noun has an adjective and a possessive modifier"
+cat FILE.conllu | ./deptreepy.py 'find_partial_subtrees (POS NOUN) (POS ADJ) (DEPREL nmod:poss)'
+
 echo "## extract predicate frames by reading a pattern from a script" 
 cat FILE.conllu | ./deptreepy.py 'from_script predicates.oper'
 

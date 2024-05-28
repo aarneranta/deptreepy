@@ -346,6 +346,14 @@ def find_paths(patts: [Pattern]) -> Operation:
         'find paths matching sequences of patterns'
         )
 
+def find_partial_subtrees(patts: [Pattern]) -> Operation:
+    return Operation (
+        lambda ts: (p for t in ts for p in find_partial_local_subtrees(patts, t)),
+        Iterable[DepTree],
+        Iterable[DepTree],
+        'find_partial_subtrees',
+        'find partial subtrees matching tree patterns'
+        )
 
 
 @operation
@@ -400,7 +408,11 @@ def parse_operation(ss: list[str]) -> Operation:
         case ['change_subtrees', *ww]:
             return change_subtrees(parse_pattern(' '.join([*ww])))
         case ['find_paths', *ww]:
-            return find_paths(parse_pattern(' '.join(['PATH'] + [*ww])).subtrees)   
+            return find_paths(
+                parse_pattern(' '.join(['PATH'] + [*ww])).subtrees)   
+        case ['find_partial_subtrees', *ww]:
+            return find_partial_subtrees(
+                parse_pattern(' '.join(['PATH'] + [*ww])).subtrees)   
         case ['extract_sentences']:
             return extract_sentences
         case ['trees2conllu']:

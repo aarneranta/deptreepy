@@ -39,6 +39,7 @@ The command-arg combinations are
    'change_wordlines <pattern>'      # make changes in wordlines
    'change_subtrees <pattern>'       # change subtrees recursively
    'find_paths <pattern>*'           # find paths matching subsequent patterns
+   'find_partial_subtrees <pattern>*' # find partial local subtrees matching tree patterns
    'statistics <field>*'             # frequency-ordered statistics of <field>*
    'ngram_statistics <int> <field>*' # frequency-ordered statistics of n-grams of <field>*
    'treetype_statistics <field>*'    # frequency-ordered statistics of types of trees (head+dependents)
