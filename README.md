@@ -34,6 +34,7 @@ The command-arg combinations are
    cosine_similarity <field>* <filter>? <file> <file>  # cosine similarity of treebanks wrt <field>*
    'match_trees <pattern>'           # match entire trees 
    'match_subtrees <pattern>'        # match entire trees and recursively their subtrees
+   'match_found_in_tree <pattern>'   # show entire tree if any subtree matches, mark +MATCH
    'match_wordlines <pattern>'       # match individual wordlines in all trees
    'match_segments <pattern>         # match contiguous, disjoint segments of trees
    'change_wordlines <pattern>'      # make changes in wordlines

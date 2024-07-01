@@ -136,6 +136,19 @@ def matches_in_deptree(patt: Pattern, tree: DepTree) -> list[DepTree]:
     return ts
 
 
+def match_found_in_deptree(patt: Pattern, tree: DepTree) -> list[DepTree]:
+    "return a tree that has at least one matching subtree"
+    if match_deptree(patt, tree):
+        tree.add_misc('MATCH')
+        return [tree]
+    else:
+        for subtree in tree.subtrees:
+            if match_deptree(patt, subtree):
+                subtree.add_misc('MATCH')
+                return [tree]
+    return []
+
+
 def len_segment_pattern(patt: Pattern) -> int:
     match patt:
         case Pattern('SEGMENT', patts):

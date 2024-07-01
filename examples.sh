@@ -39,6 +39,9 @@ cat FILE.conllu | ./deptreepy.py 'match_wordlines FEATS *=In*'
 echo "## wordlines whose part of speech is not one of a function word"
 cat FILE.conllu | ./deptreepy.py 'match_wordlines NOT (POS IN ADP AUX PRON DET *CONJ PUNCT)'
 
+echo "## show trees that contain any ccomp subtree with mark other than 'that'"
+cat FILE.conllu | ./deptreepy.py 'match_found_in_tree (TREE_ (DEPREL ccomp) (AND (DEPREL mark) (NOT (LEMMA that))))'
+
 echo "## wordlins excluding a list of stopwords saved in a script file"
 cat FILE.conllu | ./deptreepy.py 'from_script stopwords.oper'
 

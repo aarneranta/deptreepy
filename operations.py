@@ -292,6 +292,22 @@ def match_subtrees(patt: Pattern) -> Operation:
         )
 
 
+def match_found_in_tree(patt: Pattern) -> Operation:
+
+    def matcht(ts):
+        for tr in ts:
+            for t in match_found_in_deptree(patt, tr):
+                yield t
+                
+    return Operation (
+        matcht,
+        Iterable[DepTree],
+        Iterable[DepTree],
+        'match_found_in_tree',
+        'pattern matching inside trees, yielding the ones where some subtree matches'
+        )
+
+
 def match_segments(patt: Pattern) -> Operation:
     def matcht(ts):
         for segm in matches_in_tree_stream(patt, ts):
@@ -397,6 +413,8 @@ def parse_operation(ss: list[str]) -> Operation:
             return match_wordlines(parse_pattern(' '.join([*ww])))
         case ['match_subtrees', *ww]:
             return match_subtrees(parse_pattern(' '.join([*ww])))
+        case ['match_found_in_tree', *ww]:
+            return match_found_in_tree(parse_pattern(' '.join([*ww])))
         case ['match_trees', *ww]:
             return match_trees(parse_pattern(' '.join([*ww])))
         case ['match_segments', *ww]:

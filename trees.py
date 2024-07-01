@@ -174,6 +174,9 @@ class DepTree(Tree):
 
     def prefix_comments(self, ss):
         self.comments = ss + self.comments
+
+    def add_misc(self, s):
+        self.root.MISC += '+' + s
         
 
     
