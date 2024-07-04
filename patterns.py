@@ -138,15 +138,20 @@ def matches_in_deptree(patt: Pattern, tree: DepTree) -> list[DepTree]:
 
 def match_found_in_deptree(patt: Pattern, tree: DepTree) -> list[DepTree]:
     "return a tree that has at least one matching subtree"
-    if match_deptree(patt, tree):
-        tree.add_misc('MATCH')
+
+    def found_in(tr):
+        if match_deptree(patt, tr):
+            tr.add_misc('MATCH')
+        for subtree in tr.subtrees:
+            found_in(subtree)
+
+    found_in(tree)
+
+    if any(w.MISC.endswith('+MATCH') for w in tree.wordlines()):
+        ### +MATCH should not appear in MISC for another reason
         return [tree]
     else:
-        for subtree in tree.subtrees:
-            if match_deptree(patt, subtree):
-                subtree.add_misc('MATCH')
-                return [tree]
-    return []
+        return []
 
 
 def len_segment_pattern(patt: Pattern) -> int:
