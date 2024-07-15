@@ -1,2 +1,3 @@
 model: english-ewt-ud-2.12-230717
+# model: german-hdt-ud-2.12-230717
 # other params to come, see https://lindat.mff.cuni.cz/services/udpipe/api-reference.php
