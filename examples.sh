@@ -69,8 +69,8 @@ cat FILE.conllu | ./deptreepy.py 'find_partial_subtrees (POS NOUN) (POS ADJ) (DE
 echo "## extract predicate frames by reading a pattern from a script" 
 cat FILE.conllu | ./deptreepy.py 'from_script predicates.oper'
 
-echo "## parse a text file and analyse the result"
-cat FILE.txt | ./deptreepy.py 'txt2conllu | conllu2trees | match_subtrees (POS ADJ)'
+echo "## parse a German text file and analyse the result"
+cat FILE.txt | ./deptreepy.py 'txt2conllu Ger | conllu2trees | match_subtrees (POS ADJ)'
 
 echo "## visualize trees in SVG"
 cat FILE.conllu | ./deptreepy.py 'visualize_conllu' >FILE-trees.html

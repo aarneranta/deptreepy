@@ -10,6 +10,8 @@ from treetypes import treetype_statistics_dict, head_dep_statistics_dict
 from visualize_ud import conll2svg
 from udpipe2_client import process
 from yaml import safe_load
+from udpipe2_models import udpipe2_model
+
 
 # not used, letting UD-Pipe do sentence splitting
 # from sentence_splitter import split_text_into_sentences
@@ -378,15 +380,13 @@ def visualize_conllu(s: Iterable[str]) -> Iterable[str]:
     s = '\n'.join([s.strip() for s in s])  ## type of conll2svg should be It[str] 
     return conll2svg(s)
 
-@operation
-def txt2conllu(corpus: Iterable[str]) -> CoNLLU:
+
+def txt2conllu_model(model: str, corpus: Iterable[str]) -> CoNLLU:
     "parse a raw text corpus into CoNNL-U, using UDPipe2"
     corpus = '\n'.join([line.strip() for line in corpus])
-    with open("udpipe2_params.yaml") as f:
-        udpipe2_params = safe_load(f)
     udpipe2_params = {
         "data": corpus,
-        "model": udpipe2_params["model"],
+        "model": model,
         # empty strings (as opposed to None) will enable these components)
         "tokenizer": "", "parser": "", "tagger": "",
         "outfile": None, # stdout
@@ -395,6 +395,29 @@ def txt2conllu(corpus: Iterable[str]) -> CoNLLU:
     parsed = process(udpipe2_params)
     for line in parsed.split("\n"):
         yield line
+
+
+# the original definition by Arianna
+@operation
+def txt2conllu_yaml(corpus: Iterable[str]) -> CoNLLU:
+    "parse a raw text corpus into CoNNL-U, using UDPipe2"
+    with open("udpipe2_params.yaml") as f:
+        udpipe2_params = safe_load(f)
+        model = udpipe2_params['model']
+    for c in txt2conllu_model(model, corpus):
+        yield c
+
+    
+def txt2conllu(langname: str) -> Operation:
+    model = udpipe2_model(langname)
+    return Operation (
+        lambda corpus: txt2conllu_model(model, corpus),
+        Iterable[str],
+        Iterable[WordLine],
+        "parse text to CoNLLU",
+        "parse a raw text corpus into CoNLL-U, using UDPipe2"
+        )
+
 
 def from_script(filename: str) -> Operation:
     "reads an operation by parsing a file"
@@ -453,8 +476,10 @@ def parse_operation(ss: list[str]) -> Operation:
             return visualize_conllu
         case ['from_script', filename]:
             return from_script(filename)
+        case ['txt2conllu', langname]:
+            return txt2conllu(langname)
         case ['txt2conllu']:
-            return txt2conllu
+            return txt2conllu_yaml
         case ['conllu2trees']:
             return conllu2trees
         case _:

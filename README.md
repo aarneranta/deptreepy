@@ -53,7 +53,7 @@ The command-arg combinations are
    'trees2conllu'                    # convert internal trees to CoNLLU stanzas
    'trees2wordlines'                 # convert internal trees to a single sequence of wordlines
    'visualize_conllu'                # convert a CoNNLU text into SVG in HTML
-   'txt2conllu'                      # parse raw text with UDPipe2 (model config in udpipe2_params.yaml)
+   'txt2conllu <3-letter-lang>?'     # parse raw text with UDPipe2 (if no lang, read from yaml)
    'conllu2trees'                    # convert conllu to deptrees (e.g. to analyse parse result further)
    'from_script <file>'              # read commands from a file
 
