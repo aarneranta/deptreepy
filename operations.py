@@ -88,7 +88,7 @@ def conllu2wordlines(lines: CoNLLU) -> Iterable[WordLine]:
 
 @operation
 def conllu2trees(lines: CoNLLU) -> Iterable[DepTree]:
-    "convert a list of lines into a deptree"
+    "convert a stream of lines into a stream of deptrees"
     comms = []
     nodes = []
     for line in lines:
@@ -103,6 +103,23 @@ def conllu2trees(lines: CoNLLU) -> Iterable[DepTree]:
             yield dt
             comms = []
             nodes = []
+
+            
+@operation
+def wordlines2wordliness(lines: Iterable[WordLine]) -> Iterable[list[WordLine]]:
+    "convert a stream of wordlines into a stream of lists of wordlines"
+    oid = 0
+    stanza = []
+    for line in lines:
+        id = ifint(line.ID)
+        if id > oid:
+            stanza.append(line)
+            oid = id
+        else:
+            yield stanza
+            stanza = [line]
+            oid = id
+
 
 @operation
 def wordlines2strs(lines: Iterable[WordLine]) -> Iterable[str]:
@@ -204,11 +221,22 @@ def statistics(fields: list[str]) -> Operation:
 
 def ngram_statistics(n: int, fields: list[str]) -> Operation:
     return Operation (
+        lambda ws: sorted_statistics(wordline_ngram_statistics(fields,
+                        wordline_ngrams(n, wordlines2wordliness(ws)))),
+        Iterable[WordLine],
+        list,
+        'statistics',
+        "frequency table of ngrams of combinations of fields in stanzas, sorted as a list in descending order"
+        )
+
+
+def tree_ngram_statistics(n: int, fields: list[str]) -> Operation:
+    return Operation (
         lambda ws: sorted_statistics(wordline_ngram_statistics(fields, ngrams(n, ws))),
         Iterable[DepTree],
         list,
         'statistics',
-        "frequency table of ngrams of combinations of fields, sorted as a list in descending order"
+        "frequency table of ngrams of combinations of fields in trees, sorted as a list in descending order"
         )
 
 
@@ -466,6 +494,8 @@ def parse_operation(ss: list[str]) -> Operation:
             return statistics(ww)
         case ['ngram_statistics', n, *ww]:
             return ngram_statistics(int(n), ww)
+        case ['tree_ngram_statistics', n, *ww]:
+            return tree_ngram_statistics(int(n), ww)
         case ['treetype_statistics', *ww]:
             return treetype_statistics(ww)
         case ['head_dep_statistics', *ww]:

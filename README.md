@@ -43,6 +43,7 @@ The command-arg combinations are
    'find_partial_subtrees <pattern>*' # find partial local subtrees matching tree patterns
    'statistics <field>*'             # frequency-ordered statistics of <field>*
    'ngram_statistics <int> <field>*' # frequency-ordered statistics of n-grams of <field>*
+   'tree_ngram_statistics <int> <field>*' # statistics of n-grams of <field>* from trees
    'treetype_statistics <field>*'    # frequency-ordered statistics of types of trees (head+dependents)
    'head_dep_statistics <field>*'    # frequency-ordered statistics of head-dependent pairs
    'count_wordlines'                 # the number of wordlines

@@ -9,6 +9,9 @@ cat FILE.conllu | ./deptreepy.py 'match_wordlines DEPREL nsubj | statistics POS'
 echo "## statistics of POS 3-grams"
 cat FILE.conllu | ./deptreepy.py 'ngram_statistics 3 POS'
 
+echo "## statistics of FORM 3-grams ignoring punctuation"
+cat FILE.conllu | ./deptreepy.py 'match_wordlines (NOT (POS PUNCT)) | ngram_statistics 3 FORM'
+
 echo "##statistics of tree configurations in terms of POS+DEPREL"
 cat FILE.conllu | ./deptreepy.py 'treetype_statistics POS DEPREL'
 

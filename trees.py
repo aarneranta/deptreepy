@@ -77,6 +77,13 @@ def ngrams(n, trees):
             yield wordlines[i:i+n] 
 
 
+def wordline_ngrams(n, wordliness):
+    "n-grams of wordlines, inside stanzas but not over tree boundaries"
+    for wordlines in wordliness:
+        for i in range(len(wordlines)-n):
+            yield wordlines[i:i+n] 
+
+
 def replace_by_underscores(fields, wordline):
     "replace the values of named fields by underscores"
     ldict = wordline.as_dict()
