@@ -192,6 +192,19 @@ def underscore_fields(fields: list[str]) -> Operation:
         "replace the values of given fields by underscores"
         )
 
+
+@operation
+def extract_fields(fields: list[str]) -> Operation:
+    fields = [f for f in WORDLINE_FIELDS if f not in fields]
+    return Operation (
+        lambda ws: (replace_by_underscores(fields, w) for w in ws),
+        Iterable[WordLine],
+        Iterable[WordLine],
+        "underscore fields",
+        "replace the values of given fields by underscores"
+        )
+
+
 def take_trees(begin: int, end: int) -> Operation:
     
     def take(ts):
@@ -500,6 +513,8 @@ def parse_operation(ss: list[str]) -> Operation:
             return treetype_statistics(ww)
         case ['head_dep_statistics', *ww]:
             return head_dep_statistics(ww)
+        case ['extract_fields', *ww]:
+            return extract_fields(ww)
         case ['underscore_fields', *ww]:
             return underscore_fields(ww)
         case ['visualize_conllu']:

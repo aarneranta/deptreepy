@@ -48,8 +48,9 @@ The command-arg combinations are
    'head_dep_statistics <field>*'    # frequency-ordered statistics of head-dependent pairs
    'count_wordlines'                 # the number of wordlines
    'count_trees'                     # the number ot trees
-   'take_trees <int-from> <int-to>'  # selection of trees
+   'take_trees <int-from> <int-to>'  # selection of trees (int-from included, int-to not included)
    'underscore_fields <field>*'      # replace values of <field>* with _
+   'extract_fields <field>*'         # replace values of all other fields than <field>* with _
    'extract_sentences'               # return FORM sequences as one-liners
    'trees2conllu'                    # convert internal trees to CoNLLU stanzas
    'trees2wordlines'                 # convert internal trees to a single sequence of wordlines
