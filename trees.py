@@ -229,7 +229,7 @@ def nonprojective(tree: DepTree) -> bool:
     "if a subtree is not projective, i.e. does not span over a continuous sequence"
     ids = [int(w.ID) for w in tree.wordlines() if w.ID.isdigit()]
     ids.sort()
-    return len(ids) == max(ids) - min(ids)
+    return len(ids) < 1 + max(ids) - min(ids)
 
     
 def echo_conllu_file(file: Iterable[str]):

@@ -79,7 +79,8 @@ def match_deptree(patt: Pattern, tree: DepTree) -> bool:
                 return intpred(n, tree.depth())
             case Pattern('METADATA', [strpatt]):
                 return match_str(strpatt, '\n'.join(tree.comments))
-            case Pattern ('IS_NONPROJECTIVE', _):
+            case Pattern ('IS_NONPROJECTIVE', []):
+                if nonprojective(tree): print('NON')
                 return nonprojective(tree)
             case Pattern('TREE', [pt, *patts]):
                 return (len(patts) == len(sts := tree.subtrees) 
