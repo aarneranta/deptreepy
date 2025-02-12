@@ -1,6 +1,7 @@
 
 model_dict = {
     'Bul': 'bulgarian-btb-ud-2.12-230717',
+    'Chi': 'chinese-gsdsimp-ud-2.15-241121',
     'Cze': 'czech-pdt-ud-2.12-230717',
     'Eng': 'english-ewt-ud-2.12-230717',
     'Fin': 'finnish-tdt-ud-2.12-230717',
