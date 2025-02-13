@@ -7,6 +7,7 @@ model_dict = {
     'Fin': 'finnish-tdt-ud-2.12-230717',
     'Fre': 'french-gsd-ud-2.12-230717',
     'Ger': 'german-gsd-ud-2.12-230717',
+    'Gre': 'greek-gud-ud-2.15-241121',
     'Hrv': 'croatian-set-ud-2.12-230717',
     'Ita': 'italian-isdt-ud-2.12-230717',
     'Por': 'portuguese-bosque-ud-2.12-230717',
