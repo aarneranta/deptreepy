@@ -26,6 +26,7 @@ def clean_previous_indexing_files(corpus: str, base_dir: str) -> None:
     """
     Remove all files and directories inside base_dir whose names start with
     `corpus`, except the file whose base name is exactly `corpus`.
+    Clean also the sub_corpora_size file for the corpus, if it exists.
     """
     if not os.path.isdir(base_dir):
         raise ValueError(f"{base_dir} is not a valid directory")
@@ -44,6 +45,10 @@ def clean_previous_indexing_files(corpus: str, base_dir: str) -> None:
             os.remove(full_path)
         elif os.path.isdir(full_path):
             shutil.rmtree(full_path)
+    # Remove the sub_corpora_size file for the corpus, if it exists
+    size_file = os.path.join(base_dir, f"sub_corpora_size_{corpus}.pkl")
+    if os.path.exists(size_file):
+        os.remove(size_file)
 
 
 def split_corpus(
@@ -102,7 +107,7 @@ def split_corpus(
 
         output_files.append(output_path)
 
-    with open(Path(base_dir) / "sub_corpora_size.pkl", "wb") as f:
+    with open(Path(base_dir) / f"sub_corpora_size_{Path(corpus).stem}.pkl", "wb") as f:
         pickle.dump(chunk_size, f)
 
     return output_files
@@ -180,9 +185,9 @@ def run_korpsearch(
     subprocess.run(command, **kwargs)
 
 
-def _load_sub_corpora_size(base_dir: str) -> int:
-    """Load the cached per-chunk sentence count, raising if missing."""
-    size_file = f"{base_dir}/sub_corpora_size.pkl"
+def _load_sub_corpora_size(base_dir: str, corpus: str) -> int:
+    """Load the cached per-chunk sentence count for `corpus`, raising if missing."""
+    size_file = f"{base_dir}/sub_corpora_size_{Path(corpus).stem}.pkl"
     if not os.path.exists(size_file):
         raise FileNotFoundError(
             f"Sub-corpora size file not found: {size_file}. "
@@ -220,7 +225,7 @@ def merge_output_indices_files(corpus: str, base_dir: str, search_id: str) -> No
         f"{INTERMEDIATE_OUTPUT_PATH}/{corpus}_*_output_indices_{search_id}.pkl"
     ))
     output_file = f"{INTERMEDIATE_OUTPUT_PATH}/{corpus}_output_indices_{search_id}.pkl"
-    sub_corpora_size = _load_sub_corpora_size(base_dir)
+    sub_corpora_size = _load_sub_corpora_size(base_dir, corpus)
 
     global_indices = []
     for fname in input_files:
@@ -350,7 +355,7 @@ def search(args: argparse.Namespace) -> None:
                 INTERMEDIATE_OUTPUT_PATH.mkdir(parents=True, exist_ok=True)
                 # Build a full-range index spanning all sentences across all sub-corpora.
                 num_sub_corpora = len(glob.glob(f"{base_dir}/{corpus}_*.csv"))
-                sub_corpora_size = _load_sub_corpora_size(base_dir)
+                sub_corpora_size = _load_sub_corpora_size(base_dir, corpus)
                 sentence_indices = list(range(num_sub_corpora * (sub_corpora_size + 1)))
                 with open(indices_file, "wb") as f:
                     pickle.dump(sentence_indices, f)
